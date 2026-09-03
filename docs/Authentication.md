@@ -11,27 +11,27 @@ Identity management uses a hybrid model combining **Redis-backed session tokens*
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor User as Citizen / Officer
-    participant NGINX as NGINX Load Balancer
-    participant Flask as Flask API Auth Blueprint
-    participant Redis as Redis Session Store
-    participant DB as main_db (PostgreSQL)
+ autonumber
+ actor User as Citizen / Officer
+ participant NGINX as NGINX Load Balancer
+ participant Flask as Flask API Auth Blueprint
+ participant Redis as Redis Session Store
+ participant DB as main_db (PostgreSQL)
 
-    User->>NGINX: POST /api/v1/auth/login (Credentials / OTP)
-    NGINX->>Flask: Forward Request + Client IP
-    Flask->>DB: Validate User / Officer Hash (Argon2id)
-    DB-->>Flask: Account Verified
-    Flask->>Redis: SET session:<token> (TTL=86400s, JSON User Data)
-    Redis-->>Flask: OK
-    Flask-->>User: Return HTTP-Only Cookie + Session Token
+ User->>NGINX: POST /api/v1/auth/login (Credentials / OTP)
+ NGINX->>Flask: Forward Request + Client IP
+ Flask->>DB: Validate User / Officer Hash (Argon2id)
+ DB-->>Flask: Account Verified
+ Flask->>Redis: SET session:<token> (TTL=86400s, JSON User Data)
+ Redis-->>Flask: OK
+ Flask-->>User: Return HTTP-Only Cookie + Session Token
 
-    Note over User, Redis: Subsequent Authenticated Requests
-    User->>NGINX: POST /api/v1/complaints/submit (Bearer Session Token)
-    NGINX->>Flask: Forward Request
-    Flask->>Redis: GET session:<token>
-    Redis-->>Flask: Session Data (User ID, Role, Permissions)
-    Flask->>Flask: Execute Request (Context & Priority Engine)
+ Note over User, Redis: Subsequent Authenticated Requests
+ User->>NGINX: POST /api/v1/complaints/submit (Bearer Session Token)
+ NGINX->>Flask: Forward Request
+ Flask->>Redis: GET session:<token>
+ Redis-->>Flask: Session Data (User ID, Role, Permissions)
+ Flask->>Flask: Execute Request (Context & Priority Engine)
 ```
 
 ---
@@ -47,24 +47,24 @@ from flask import request, jsonify, g
 from app.extensions import redis_client
 
 def require_session(f):
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return jsonify({"error": "Unauthorized", "message": "Missing authentication token"}), 401
-        
-        token = auth_header.split(" ")[1]
-        session_key = f"session:{token}"
-        
-        # Check Redis Cache (sub-millisecond response)
-        session_data_raw = redis_client.get(session_key)
-        if not session_data_raw:
-            return jsonify({"error": "Unauthorized", "message": "Session expired or invalid"}), 401
-        
-        # Load user context into Flask request global `g`
-        g.current_user = json.loads(session_data_raw)
-        return f(*args, **kwargs)
-    return decorated
+ @functools.wraps(f)
+ def decorated(*args, **kwargs):
+ auth_header = request.headers.get("Authorization")
+ if not auth_header or not auth_header.startswith("Bearer "):
+ return jsonify({"error": "Unauthorized", "message": "Missing authentication token"}), 401
+ 
+ token = auth_header.split(" ")[1]
+ session_key = f"session:{token}"
+ 
+ # Check Redis Cache (sub-millisecond response)
+ session_data_raw = redis_client.get(session_key)
+ if not session_data_raw:
+ return jsonify({"error": "Unauthorized", "message": "Session expired or invalid"}), 401
+ 
+ # Load user context into Flask request global `g`
+ g.current_user = json.loads(session_data_raw)
+ return f(*args, **kwargs)
+ return decorated
 ```
 
 ---
@@ -77,20 +77,20 @@ When a citizen or departmental officer performs high-sensitivity actions (e.g. s
 @auth_bp.route("/reverify", methods=["POST"])
 @require_session
 def reverify_user():
-    """Re-authenticates active user password/OTP before critical SRCS state change."""
-    data = request.get_json()
-    password = data.get("password")
-    user_id = g.current_user["user_id"]
+ """Re-authenticates active user password/OTP before critical SRCS state change."""
+ data = request.get_json()
+ password = data.get("password")
+ user_id = g.current_user["user_id"]
 
-    user = User.query.get(user_id)
-    if not user or not user.verify_password(password):
-        return jsonify({"success": False, "message": "Re-verification failed"}), 403
+ user = User.query.get(user_id)
+ if not user or not user.verify_password(password):
+ return jsonify({"success": False, "message": "Re-verification failed"}), 403
 
-    # Generate short-lived re-auth token in Redis (Valid for 5 minutes)
-    reverify_token = generate_secure_token()
-    redis_client.setex(f"reverify:{user_id}", 300, reverify_token)
+ # Generate short-lived re-auth token in Redis (Valid for 5 minutes)
+ reverify_token = generate_secure_token()
+ redis_client.setex(f"reverify:{user_id}", 300, reverify_token)
 
-    return jsonify({"success": True, "reverify_token": reverify_token}), 200
+ return jsonify({"success": True, "reverify_token": reverify_token}), 200
 ```
 
 ---

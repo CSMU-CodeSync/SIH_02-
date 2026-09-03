@@ -15,17 +15,17 @@
 - **SQLAlchemy 2.0 Syntax**: Use explicit `db.session.execute(select(...))` and `db.session.commit()`.
 - **Redis Caching Decorator**: Wrap all citizen lookup routes with Redis cache check to guarantee sub-50ms response times.
 - **Structured Error Responses**: Always return standard JSON error schemas:
-  ```json
-  {
-    "error": "ErrorCategory",
-    "message": "Human readable detail",
-    "status_code": 400
-  }
-  ```
+ ```json
+ {
+ "error": "ErrorCategory",
+ "message": "Human readable detail",
+ "status_code": 400
+ }
+ ```
 
 ---
 
-### 🔴 **STRICTLY FORBIDDEN (Avoid This)**
+### **STRICTLY FORBIDDEN (Avoid This)**
 - **DO NOT** write raw SQL query strings with string concatenation (`f"SELECT * FROM users WHERE id='{user_id}'"`). Always use SQLAlchemy ORM parameterization.
 - **DO NOT** execute blocking LLM or HTTP calls on the main Flask request loop. Use Celery background tasks for long operations.
 - **DO NOT** store unencrypted plain text passwords or secrets in codebase / git repos. Use `.env` with environment variable validation.
@@ -54,47 +54,47 @@ gemini_engine = GeminiFlashEngine(os.getenv("GEMINI_API_KEY"))
 @complaints_bp.route("/submit", methods=["POST"])
 @require_session
 def submit_complaint():
-    data = request.get_json()
-    raw_text = data.get("text")
-    if not raw_text:
-        return jsonify({"error": "ValidationError", "message": "Complaint text required"}), 400
+ data = request.get_json()
+ raw_text = data.get("text")
+ if not raw_text:
+ return jsonify({"error": "ValidationError", "message": "Complaint text required"}), 400
 
-    # 1. AI Context & Priority Classification via Gemini 2.5 Flash
-    ai_result = gemini_engine.analyze_and_classify(raw_text)
+ # 1. AI Context & Priority Classification via Gemini 2.5 Flash
+ ai_result = gemini_engine.analyze_and_classify(raw_text)
 
-    # 2. Encrypt sensitive text via Encryption Barrier
-    encrypted_text = enc_service.encrypt_payload(raw_text)
+ # 2. Encrypt sensitive text via Encryption Barrier
+ encrypted_text = enc_service.encrypt_payload(raw_text)
 
-    # 3. Create Complaint Model
-    complaint = Complaint(
-        user_id=g.current_user["user_id"],
-        encrypted_data=encrypted_text,
-        category=ai_result["category"],
-        priority=ai_result["priority_level"],
-        summary=ai_result["summary"],
-        department=ai_result["target_department"]
-    )
-    db.session.add(complaint)
-    db.session.commit()
+ # 3. Create Complaint Model
+ complaint = Complaint(
+ user_id=g.current_user["user_id"],
+ encrypted_data=encrypted_text,
+ category=ai_result["category"],
+ priority=ai_result["priority_level"],
+ summary=ai_result["summary"],
+ department=ai_result["target_department"]
+ )
+ db.session.add(complaint)
+ db.session.commit()
 
-    # 4. Generate Salted Tracking Hash & Cache in Redis
-    tracking_hash = salt_service.generate_salted_tracking_hash(str(complaint.id), str(complaint.created_at))
-    complaint.tracking_hash = tracking_hash
-    db.session.commit()
+ # 4. Generate Salted Tracking Hash & Cache in Redis
+ tracking_hash = salt_service.generate_salted_tracking_hash(str(complaint.id), str(complaint.created_at))
+ complaint.tracking_hash = tracking_hash
+ db.session.commit()
 
-    # Cache status in Redis
-    redis_client.setex(f"trk:{tracking_hash}", 3600, jsonify({
-        "tracking_hash": tracking_hash,
-        "status": "INGESTED",
-        "priority": ai_result["priority_level"],
-        "department": ai_result["target_department"]
-    }).get_data(as_text=True))
+ # Cache status in Redis
+ redis_client.setex(f"trk:{tracking_hash}", 3600, jsonify({
+ "tracking_hash": tracking_hash,
+ "status": "INGESTED",
+ "priority": ai_result["priority_level"],
+ "department": ai_result["target_department"]
+ }).get_data(as_text=True))
 
-    return jsonify({
-        "success": True,
-        "complaint_id": str(complaint.id),
-        "tracking_hash": tracking_hash,
-        "priority": ai_result["priority_level"],
-        "department": ai_result["target_department"]
-    }), 201
+ return jsonify({
+ "success": True,
+ "complaint_id": str(complaint.id),
+ "tracking_hash": tracking_hash,
+ "priority": ai_result["priority_level"],
+ "department": ai_result["target_department"]
+ }), 201
 ```

@@ -4,21 +4,21 @@
 
 ```mermaid
 gantt
-    title SIH 02 Flask Backend Roadmap Execution
-    dateFormat  YYYY-MM-DD
-    section Phase 1: Setup & Infra
-    Flask Factory & NGINX Scaffolding   :active, p1, 2026-09-01, 3d
-    section Phase 2: Security & DB
-    Postgres Schema & Encryption Barriers: p2a, after p1, 4d
-    Redis Session & Authentication API   : p2b, after p2a, 4d
-    section Phase 3: AI Intelligence
-    Gemini 2.5 Flash Context & Priority : p3, after p2b, 5d
-    section Phase 4: Routing & Depts
-    main_db Router & dep_01..03 DBs     : p4, after p3, 4d
-    section Phase 5: SRCS Engine
-    SLA 24h/36h/72h & PRR Verification  : p5, after p4, 5d
-    section Phase 6: Audit & Prod
-    OWASP Audit, Docker & Load Testing   : p6, after p5, 3d
+ title SIH 02 Flask Backend Roadmap Execution
+ dateFormat YYYY-MM-DD
+ section Phase 1: Setup & Infra
+ Flask Factory & NGINX Scaffolding :active, p1, 2026-09-01, 3d
+ section Phase 2: Security & DB
+ Postgres Schema & Encryption Barriers: p2a, after p1, 4d
+ Redis Session & Authentication API : p2b, after p2a, 4d
+ section Phase 3: AI Intelligence
+ Gemini 2.5 Flash Context & Priority : p3, after p2b, 5d
+ section Phase 4: Routing & Depts
+ main_db Router & dep_01..03 DBs : p4, after p3, 4d
+ section Phase 5: SRCS Engine
+ SLA 24h/36h/72h & PRR Verification : p5, after p4, 5d
+ section Phase 6: Audit & Prod
+ OWASP Audit, Docker & Load Testing : p6, after p5, 3d
 ```
 
 ---

@@ -17,16 +17,16 @@ import json
 import google.generativeai as genai
 
 class GeminiFlashEngine:
-    def __init__(self, api_key: str):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            generation_config={"temperature": 0.1, "response_mime_type": "application/json"}
-        )
+ def __init__(self, api_key: str):
+ genai.configure(api_key=api_key)
+ self.model = genai.GenerativeModel(
+ model_name="gemini-2.5-flash",
+ generation_config={"temperature": 0.1, "response_mime_type": "application/json"}
+ )
 
-    def analyze_and_classify(self, complaint_text: str) -> dict:
-        """Executes combined context extraction and priority classification."""
-        prompt = f"""
+ def analyze_and_classify(self, complaint_text: str) -> dict:
+ """Executes combined context extraction and priority classification."""
+ prompt = f"""
 You are the AI Intelligence Engine for the SIH 02 Public Grievance Platform.
 Analyze the following citizen complaint text and respond strictly in JSON.
 
@@ -35,16 +35,16 @@ Complaint Text:
 
 Return JSON matching this schema:
 {{
-  "category": "ROADS_INFRASTRUCTURE | WATER_SUPPLY | ELECTRICITY | SANITATION | OTHER",
-  "keywords": ["list", "of", "semantic", "keywords"],
-  "urgency_score": <integer from 1 to 10>,
-  "priority_level": "P1-CRITICAL | P2-HIGH | P3-MEDIUM | P4-LOW",
-  "summary": "<1-sentence neutral summary>",
-  "target_department": "dep_01 | dep_02 | dep_03"
+ "category": "ROADS_INFRASTRUCTURE | WATER_SUPPLY | ELECTRICITY | SANITATION | OTHER",
+ "keywords": ["list", "of", "semantic", "keywords"],
+ "urgency_score": <integer from 1 to 10>,
+ "priority_level": "P1-CRITICAL | P2-HIGH | P3-MEDIUM | P4-LOW",
+ "summary": "<1-sentence neutral summary>",
+ "target_department": "dep_01 | dep_02 | dep_03"
 }}
 """
-        response = self.model.generate_content(prompt)
-        return json.loads(response.text)
+ response = self.model.generate_content(prompt)
+ return json.loads(response.text)
 ```
 
 ---
@@ -54,11 +54,11 @@ Return JSON matching this schema:
 When an officer submits resolution proof (e.g. photo of fixed road/pipe), the PRR Engine compares original complaint context with submitted proof:
 
 ```python
-    def verify_resolution_proof(self, complaint_summary: str, image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
-        """Uses Gemini 2.5 Flash Vision capability to audit resolution proof."""
-        image_part = {"mime_type": mime_type, "data": image_bytes}
-        
-        prompt = f"""
+ def verify_resolution_proof(self, complaint_summary: str, image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
+ """Uses Gemini 2.5 Flash Vision capability to audit resolution proof."""
+ image_part = {"mime_type": mime_type, "data": image_bytes}
+ 
+ prompt = f"""
 You are the SRCS PRR (Problem Resolve Re-evaluation) Auditor.
 Original Complaint Summary: "{complaint_summary}"
 
@@ -66,15 +66,15 @@ Inspect the provided resolution proof image and evaluate whether it genuinely de
 
 Return JSON matching this schema:
 {{
-  "is_valid_proof": <boolean true/false>,
-  "confidence_score": <float between 0.0 and 1.0>,
-  "visual_evidence_observed": "<description of visual proof>",
-  "audit_decision": "PASS | REJECT_INSUFFICIENT_PROOF | REJECT_MISMATCH",
-  "reasoning": "<explanation for the decision>"
+ "is_valid_proof": <boolean true/false>,
+ "confidence_score": <float between 0.0 and 1.0>,
+ "visual_evidence_observed": "<description of visual proof>",
+ "audit_decision": "PASS | REJECT_INSUFFICIENT_PROOF | REJECT_MISMATCH",
+ "reasoning": "<explanation for the decision>"
 }}
 """
-        response = self.model.generate_content([prompt, image_part])
-        return json.loads(response.text)
+ response = self.model.generate_content([prompt, image_part])
+ return json.loads(response.text)
 ```
 
 ---

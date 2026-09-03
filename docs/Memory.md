@@ -25,22 +25,22 @@ System memory is partitioned into two distinct tiers:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> INGESTED: Complaint Submitted & Encrypted
-    INGESTED --> AI_ANALYZED: Gemini LLM Context & Priority Set
-    AI_ANALYZED --> ROUTED_DEP: Saved to main_db & Department Table
-    
-    state SRCS_Monitoring {
-        ROUTED_DEP --> PENDING_RESOLVE: Normal Stage (< 24h)
-        PENDING_RESOLVE --> SLA_24H_BREACH: T > 24 Hours
-        SLA_24H_BREACH --> ESCALATED_STATE_L1: T > 36 Hours (State DBMS Sync)
-        ESCALATED_STATE_L1 --> ESCALATED_CENTRAL_L2: T > 72 Hours (Central DBMS Sync)
-    }
+ [*] --> INGESTED: Complaint Submitted & Encrypted
+ INGESTED --> AI_ANALYZED: Gemini LLM Context & Priority Set
+ AI_ANALYZED --> ROUTED_DEP: Saved to main_db & Department Table
+ 
+ state SRCS_Monitoring {
+ ROUTED_DEP --> PENDING_RESOLVE: Normal Stage (< 24h)
+ PENDING_RESOLVE --> SLA_24H_BREACH: T > 24 Hours
+ SLA_24H_BREACH --> ESCALATED_STATE_L1: T > 36 Hours (State DBMS Sync)
+ ESCALATED_STATE_L1 --> ESCALATED_CENTRAL_L2: T > 72 Hours (Central DBMS Sync)
+ }
 
-    SRCS_Monitoring --> PRR_AUDIT: Officer Submits Resolution Proof
-    PRR_AUDIT --> RESOLVED_CLOSED: PRR Verification Passed
-    PRR_AUDIT --> SLA_24H_BREACH: PRR Proof Rejected (Re-opened)
-    
-    RESOLVED_CLOSED --> [*]
+ SRCS_Monitoring --> PRR_AUDIT: Officer Submits Resolution Proof
+ PRR_AUDIT --> RESOLVED_CLOSED: PRR Verification Passed
+ PRR_AUDIT --> SLA_24H_BREACH: PRR Proof Rejected (Re-opened)
+ 
+ RESOLVED_CLOSED --> [*]
 ```
 
 ---
@@ -52,22 +52,22 @@ import json
 from app.extensions import redis_client
 
 class MemoryStateService:
-    @staticmethod
-    def cache_complaint_status(tracking_hash: str, complaint_data: dict, ttl: int = 3600):
-        """Caches complaint status in Redis for sub-millisecond citizen tracking."""
-        key = f"trk:{tracking_hash}"
-        redis_client.setex(key, ttl, json.dumps(complaint_data))
+ @staticmethod
+ def cache_complaint_status(tracking_hash: str, complaint_data: dict, ttl: int = 3600):
+ """Caches complaint status in Redis for sub-millisecond citizen tracking."""
+ key = f"trk:{tracking_hash}"
+ redis_client.setex(key, ttl, json.dumps(complaint_data))
 
-    @staticmethod
-    def get_cached_status(tracking_hash: str) -> dict:
-        """Retrieves cached complaint status."""
-        key = f"trk:{tracking_hash}"
-        raw = redis_client.get(key)
-        return json.loads(raw) if raw else None
+ @staticmethod
+ def get_cached_status(tracking_hash: str) -> dict:
+ """Retrieves cached complaint status."""
+ key = f"trk:{tracking_hash}"
+ raw = redis_client.get(key)
+ return json.loads(raw) if raw else None
 
-    @staticmethod
-    def invalidate_cache(tracking_hash: str):
-        """Invalidates cache upon status update or PRR resolution."""
-        key = f"trk:{tracking_hash}"
-        redis_client.delete(key)
+ @staticmethod
+ def invalidate_cache(tracking_hash: str):
+ """Invalidates cache upon status update or PRR resolution."""
+ key = f"trk:{tracking_hash}"
+ redis_client.delete(key)
 ```

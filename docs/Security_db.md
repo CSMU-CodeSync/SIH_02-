@@ -13,24 +13,24 @@ The database architecture employs **dual-layer cryptographic barriers**:
 
 ```mermaid
 flowchart LR
-    subgraph Ingestion & Encryption
-        RawText[Raw Complaint Text] --> EncBarrier[Encryption Barrier AES-256-GCM]
-        EncBarrier --> EncText[Encrypted Payload]
-        EncText --> MainDB[(main_db Core Ledger)]
-    end
+ subgraph Ingestion & Encryption
+ RawText[Raw Complaint Text] --> EncBarrier[Encryption Barrier AES-256-GCM]
+ EncBarrier --> EncText[Encrypted Payload]
+ EncText --> MainDB[(main_db Core Ledger)]
+ end
 
-    subgraph Tracking & Salting
-        TrackingID[Tracking ID / Hash] --> SaltBarrier[Encryption Salting Barrier HMAC-SHA256]
-        Salt[Secret Dynamic Salt] --> SaltBarrier
-        SaltBarrier --> SaltedHash[Salted Lookup Token]
-        SaltedHash --> RedisCache[(Redis Cache Store)]
-    end
+ subgraph Tracking & Salting
+ TrackingID[Tracking ID / Hash] --> SaltBarrier[Encryption Salting Barrier HMAC-SHA256]
+ Salt[Secret Dynamic Salt] --> SaltBarrier
+ SaltBarrier --> SaltedHash[Salted Lookup Token]
+ SaltedHash --> RedisCache[(Redis Cache Store)]
+ end
 
-    subgraph Department Isolation
-        MainDB -->|Router| Dep1[(dep_01 Schema)]
-        MainDB -->|Router| Dep2[(dep_02 Schema)]
-        MainDB -->|Router| Dep3[(dep_03 Schema)]
-    end
+ subgraph Department Isolation
+ MainDB -->|Router| Dep1[(dep_01 Schema)]
+ MainDB -->|Router| Dep2[(dep_02 Schema)]
+ MainDB -->|Router| Dep3[(dep_03 Schema)]
+ end
 ```
 
 ---
@@ -45,25 +45,25 @@ import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 class EncryptionBarrierService:
-    def __init__(self, master_key_b64: str):
-        self.key = base64.b64decode(master_key_b64)
-        self.aesgcm = AESGCM(self.key)
+ def __init__(self, master_key_b64: str):
+ self.key = base64.b64decode(master_key_b64)
+ self.aesgcm = AESGCM(self.key)
 
-    def encrypt_payload(self, plain_text: str) -> str:
-        """Encrypts sensitive complaint text using AES-256-GCM with a 96-bit nonce."""
-        nonce = os.urandom(12)
-        ciphertext = self.aesgcm.encrypt(nonce, plain_text.encode("utf-8"), None)
-        # Pack nonce + ciphertext and base64 encode
-        packed = nonce + ciphertext
-        return base64.b64encode(packed).decode("utf-8")
+ def encrypt_payload(self, plain_text: str) -> str:
+ """Encrypts sensitive complaint text using AES-256-GCM with a 96-bit nonce."""
+ nonce = os.urandom(12)
+ ciphertext = self.aesgcm.encrypt(nonce, plain_text.encode("utf-8"), None)
+ # Pack nonce + ciphertext and base64 encode
+ packed = nonce + ciphertext
+ return base64.b64encode(packed).decode("utf-8")
 
-    def decrypt_payload(self, encrypted_b64: str) -> str:
-        """Decrypts AES-256-GCM ciphertext payload."""
-        packed = base64.b64decode(encrypted_b64.encode("utf-8"))
-        nonce = packed[:12]
-        ciphertext = packed[12:]
-        decrypted_bytes = self.aesgcm.decrypt(nonce, ciphertext, None)
-        return decrypted_bytes.decode("utf-8")
+ def decrypt_payload(self, encrypted_b64: str) -> str:
+ """Decrypts AES-256-GCM ciphertext payload."""
+ packed = base64.b64decode(encrypted_b64.encode("utf-8"))
+ nonce = packed[:12]
+ ciphertext = packed[12:]
+ decrypted_bytes = self.aesgcm.decrypt(nonce, ciphertext, None)
+ return decrypted_bytes.decode("utf-8")
 ```
 
 ### 3.2 Encryption Salting Barrier Service
@@ -73,14 +73,14 @@ import hmac
 import hashlib
 
 class EncryptionSaltingBarrierService:
-    def __init__(self, salt_secret: str):
-        self.salt_secret = salt_secret.encode("utf-8")
+ def __init__(self, salt_secret: str):
+ self.salt_secret = salt_secret.encode("utf-8")
 
-    def generate_salted_tracking_hash(self, complaint_id: str, timestamp: str) -> str:
-        """Generates a tamper-proof HMAC-SHA256 salted hash for complaint tracking lookups."""
-        message = f"{complaint_id}:{timestamp}".encode("utf-8")
-        signature = hmac.new(self.salt_secret, message, hashlib.sha256).hexdigest()
-        return f"TRK-{signature[:16].upper()}"
+ def generate_salted_tracking_hash(self, complaint_id: str, timestamp: str) -> str:
+ """Generates a tamper-proof HMAC-SHA256 salted hash for complaint tracking lookups."""
+ message = f"{complaint_id}:{timestamp}".encode("utf-8")
+ signature = hmac.new(self.salt_secret, message, hashlib.sha256).hexdigest()
+ return f"TRK-{signature[:16].upper()}"
 ```
 
 ---
@@ -97,14 +97,14 @@ CREATE SCHEMA IF NOT EXISTS dep_03_schema;
 
 -- Isolated Complaint Table for Department 01
 CREATE TABLE dep_01_schema.complaints (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    master_complaint_id UUID NOT NULL,
-    encrypted_details TEXT NOT NULL,
-    priority_level VARCHAR(20) NOT NULL,
-    status VARCHAR(30) DEFAULT 'PENDING_RESOLVE',
-    assigned_officer_id UUID,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ master_complaint_id UUID NOT NULL,
+ encrypted_details TEXT NOT NULL,
+ priority_level VARCHAR(20) NOT NULL,
+ status VARCHAR(30) DEFAULT 'PENDING_RESOLVE',
+ assigned_officer_id UUID,
+ created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
 

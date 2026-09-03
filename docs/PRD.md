@@ -18,43 +18,43 @@ By leveraging **NGINX Load Balancing**, **Redis In-Memory Caching**, dual-layer 
 
 ```mermaid
 flowchart TD
-    Client[Citizen / API Client] --> NGINX[NGINX Load Balancer]
-    NGINX --> FlaskAPI[Flask API Gateway]
-    
-    subgraph Security & Ingestion
-        FlaskAPI --> Auth[User Session & Auth Re-verify]
-        Auth <--> Redis[Redis Cache & Session Store]
-        FlaskAPI --> EncBarrier[Encryption Barrier]
-        EncBarrier --> Tracking[Tracking Complaint System]
-        Tracking --> SaltBarrier[Encryption Salting Barrier]
-    end
+ Client[Citizen / API Client] --> NGINX[NGINX Load Balancer]
+ NGINX --> FlaskAPI[Flask API Gateway]
+ 
+ subgraph Security & Ingestion
+ FlaskAPI --> Auth[User Session & Auth Re-verify]
+ Auth <--> Redis[Redis Cache & Session Store]
+ FlaskAPI --> EncBarrier[Encryption Barrier]
+ EncBarrier --> Tracking[Tracking Complaint System]
+ Tracking --> SaltBarrier[Encryption Salting Barrier]
+ end
 
-    subgraph AI Intelligence Engine
-        FlaskAPI --> CtxAnalysis[Context Analysis]
-        FlaskAPI --> ReEval[Re-evaluation of Complaint]
-        FlaskAPI --> Priority[Priority Classification]
-        CtxAnalysis & ReEval & Priority <--> Gemini[Gemini 2.5 Flash LLM]
-    end
+ subgraph AI Intelligence Engine
+ FlaskAPI --> CtxAnalysis[Context Analysis]
+ FlaskAPI --> ReEval[Re-evaluation of Complaint]
+ FlaskAPI --> Priority[Priority Classification]
+ CtxAnalysis & ReEval & Priority <--> Gemini[Gemini 2.5 Flash LLM]
+ end
 
-    subgraph Routing & Departmental DBs
-        FlaskAPI --> MainDB[(Main Database / main_db)]
-        MainDB --> Dep1[(dep_01 DB)] & Dep2[(dep_02 DB)] & Dep3[(dep_03 DB)]
-        Dep1 --> Int1[dep_01 Interface]
-        Dep2 --> Int2[dep_02 Interface]
-        Dep3 --> Int3[dep_03 Interface]
-    end
+ subgraph Routing & Departmental DBs
+ FlaskAPI --> MainDB[(Main Database / main_db)]
+ MainDB --> Dep1[(dep_01 DB)] & Dep2[(dep_02 DB)] & Dep3[(dep_03 DB)]
+ Dep1 --> Int1[dep_01 Interface]
+ Dep2 --> Int2[dep_02 Interface]
+ Dep3 --> Int3[dep_03 Interface]
+ end
 
-    subgraph SRCS (Stage Resolve Commit System)
-        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
-        ResCheck -- YES --> Resolved[Complaint Resolved & Closed]
-        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
-        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1)]
-        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2)]
-        
-        SLA24 & StateDB & CentralDB --> PRR[PRR Engine & Proof Checking]
-        PRR -- Validated --> Resolved
-        PRR -. Re-sync .-> SaltBarrier
-    end
+ subgraph SRCS (Stage Resolve Commit System)
+ Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+ ResCheck -- YES --> Resolved[Complaint Resolved & Closed]
+ ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+ SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1)]
+ SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2)]
+ 
+ SLA24 & StateDB & CentralDB --> PRR[PRR Engine & Proof Checking]
+ PRR -- Validated --> Resolved
+ PRR -. Re-sync .-> SaltBarrier
+ end
 ```
 
 ---
