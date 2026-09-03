@@ -132,9 +132,3 @@ flowchart TB
 
 ---
 
-## 5. How to Open and View the Diagram
-
-1. Navigate to [draw.io (diagrams.net)](https://app.diagrams.net).
-2. Click **Open Existing Diagram**.
-3. Select the file: `C:\Users\HARSHAL\.gemini\antigravity\scratch\sih02_frontend\sih02.io` (or `sih02_frontend_ui_ux.drawio`).
-4. You will see the complete 5-layer visual architecture diagram with swimlanes, color-coded status badges, and orthogonal data flow connections.
