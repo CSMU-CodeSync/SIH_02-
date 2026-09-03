@@ -1,0 +1,248 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="SIH02 Architecture" id="p8EXeEI9-7Bn1ACAUIGe">
+    <mxGraphModel dx="1010" dy="594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="N_LOAD_BALANCER" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" value="NGINX Load Balancer&#xa;(Traffic Distributor)" vertex="1">
+          <mxGeometry height="60" width="160" x="40" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="N_PLATFORM" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="Complaint Platform" vertex="1">
+          <mxGeometry height="60" width="160" x="240" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="N_ENC_BARRIER" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" value="Encryption Barrier" vertex="1">
+          <mxGeometry height="60" width="150" x="440" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="N_TRACKING" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="Tracking Complaint System" vertex="1">
+          <mxGeometry height="60" width="180" x="640" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="N_SALTING" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" value="Encryption Salting Barrier" vertex="1">
+          <mxGeometry height="60" width="170" x="870" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="E_LB_P" edge="1" parent="1" source="N_LOAD_BALANCER" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PLATFORM" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_P_EB" edge="1" parent="1" source="N_PLATFORM" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_ENC_BARRIER" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_EB_TR" edge="1" parent="1" source="N_ENC_BARRIER" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_TRACKING" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_TR_ES" edge="1" parent="1" source="N_TRACKING" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_SALTING" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="N_SESS_ID" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="User Session ID" vertex="1">
+          <mxGeometry height="35" width="160" x="240" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="N_REDIS" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;fontColor=#b85450;" value="Redis Cache &amp; Session Store&#xa;(In-Memory Fast Store)" vertex="1">
+          <mxGeometry height="100" width="210" x="520" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="N_AUTH" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="User Authentication Re-verify" vertex="1">
+          <mxGeometry height="40" width="160" x="240" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="N_CTX_ANALYSIS" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Context Analysis" vertex="1">
+          <mxGeometry height="35" width="160" x="240" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="N_REEVAL_COMP" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Re-evaluation of Complaint" vertex="1">
+          <mxGeometry height="35" width="160" x="240" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="N_PRIORITY" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Priority of Complaint" vertex="1">
+          <mxGeometry height="35" width="160" x="240" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="N_BRACKET_LLM" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;rotation=-180;" value="" vertex="1">
+          <mxGeometry height="100" width="30" x="410" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="N_GEMINI_LLM" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" value="Gemini 2.5 Flash LLM&#xa;(AI Context &amp; Priority Engine)" vertex="1">
+          <mxGeometry height="50" width="180" x="470" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="E_PL_SESS" edge="1" parent="1" source="N_PLATFORM" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_SESS_ID" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_SESS_REDIS" edge="1" parent="1" source="N_SESS_ID" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashPattern=1 3;dashed=1;strokeWidth=2;strokeColor=#666666;" target="N_REDIS" value="Fast Session Sync">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_REDIS_TRK" edge="1" parent="1" source="N_REDIS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashPattern=1 3;dashed=1;strokeWidth=2;strokeColor=#666666;" target="N_TRACKING" value="Cached Lookups">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_SESS_AUTH" edge="1" parent="1" source="N_SESS_ID" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_AUTH" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_AUTH_CTX" edge="1" parent="1" source="N_AUTH" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_CTX_ANALYSIS" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_CTX_REEV" edge="1" parent="1" source="N_CTX_ANALYSIS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_REEVAL_COMP" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_REEV_PRIO" edge="1" parent="1" source="N_REEVAL_COMP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PRIORITY" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="N_MAIN_DB" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="Main Database&#xa;(main_db)" vertex="1">
+          <mxGeometry height="70" width="100" x="270" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="N_DEP1" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="dep_01" vertex="1">
+          <mxGeometry height="60" width="80" x="420" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="N_DEP2" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="dep_02" vertex="1">
+          <mxGeometry height="60" width="80" x="370" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="N_DEP3" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="dep_03" vertex="1">
+          <mxGeometry height="60" width="80" x="280" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="N_TBL1" parent="1" style="verticalLabelPosition=middle;verticalAlign=middle;html=1;shape=card;whiteSpace=wrap;size=20;arcSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" value="Complaint Table&#xa;(dep_01)" vertex="1">
+          <mxGeometry height="40" width="110" x="550" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="N_TBL2" parent="1" style="verticalLabelPosition=middle;verticalAlign=middle;html=1;shape=card;whiteSpace=wrap;size=20;arcSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" value="Complaint Table&#xa;(dep_02)" vertex="1">
+          <mxGeometry height="40" width="110" x="550" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="N_TBL3" parent="1" style="verticalLabelPosition=middle;verticalAlign=middle;html=1;shape=card;whiteSpace=wrap;size=20;arcSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" value="Complaint Table&#xa;(dep_03)" vertex="1">
+          <mxGeometry height="40" width="110" x="550" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="N_INT1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="dep_01 Interface" vertex="1">
+          <mxGeometry height="60" width="130" x="690" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="N_INT2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="dep_02 Interface" vertex="1">
+          <mxGeometry height="60" width="130" x="690" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="N_INT3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="dep_03 Interface" vertex="1">
+          <mxGeometry height="60" width="130" x="690" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="E_PRIO_MDB" edge="1" parent="1" source="N_PRIORITY" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_MAIN_DB" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_MDB_D1" edge="1" parent="1" source="N_MAIN_DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_DEP1" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_MDB_D2" edge="1" parent="1" source="N_MAIN_DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_DEP2" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_MDB_D3" edge="1" parent="1" source="N_MAIN_DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_DEP3" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_D1_T1" edge="1" parent="1" source="N_DEP1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_TBL1" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_D2_T2" edge="1" parent="1" source="N_DEP2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_TBL2" value="">
+          <mxGeometry as="geometry">
+            <Array as="points">
+              <mxPoint x="510" y="640" />
+              <mxPoint x="510" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_D3_T3" edge="1" parent="1" source="N_DEP3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_TBL3" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_T1_I1" edge="1" parent="1" source="N_TBL1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_INT1" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_T2_I2" edge="1" parent="1" source="N_TBL2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_INT2" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_T3_I3" edge="1" parent="1" source="N_TBL3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_INT3" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="N_BRACKET_RES" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;flipH=1;" value="" vertex="1">
+          <mxGeometry height="220" width="30" x="830" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="N_DECISION" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" value="Is Problem&#xa;Resolved?" vertex="1">
+          <mxGeometry height="80" width="120" x="890" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="E_BRK_DEC" edge="1" parent="1" source="N_BRACKET_RES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_DECISION" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="N_RESOLVED" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" value="Complaint Resolved&#xa;&amp; Closed" vertex="1">
+          <mxGeometry height="80" width="140" x="1500" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="E_DEC_YES" edge="1" parent="1" source="N_DECISION" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#27ae60;fontColor=#27ae60;fontStyle=1;" target="N_RESOLVED" value="YES">
+          <mxGeometry as="geometry">
+            <mxPoint x="-200" y="-75" as="offset" />
+            <Array as="points">
+              <mxPoint x="950" y="420" />
+              <mxPoint x="1570" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="N_SRCS_BOX" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#d6b656;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=13;fontColor=#b85450;" value="SRCS (Stage Resolve Commit System)" vertex="1">
+          <mxGeometry height="640" width="650" x="1040" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="N_SLA_24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Resolve Period&#xa;24 hrs" vertex="1">
+          <mxGeometry height="50" width="140" x="1070" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="N_SLA_36" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Staged Until Resolved&#xa;Period 36 hrs" vertex="1">
+          <mxGeometry height="50" width="150" x="1230" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="N_SLA_72" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Staged Until Resolved&#xa;Period 72 hrs" vertex="1">
+          <mxGeometry height="50" width="150" x="1230" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="N_STATE_DB" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="State Gov. DBMS&#xa;(L1 Escalation)" vertex="1">
+          <mxGeometry height="60" width="130" x="1440" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="N_CENTRAL_DB" parent="1" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="Central Gov. DBMS&#xa;(L2 Escalation)" vertex="1">
+          <mxGeometry height="60" width="130" x="1363" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="E_DEC_NO" edge="1" parent="1" source="N_DECISION" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#c0392b;fontColor=#c0392b;fontStyle=1;" target="N_SLA_24" value="NO">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_S24_S36" edge="1" parent="1" source="N_SLA_24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_SLA_36" value="Over 24h">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_S36_S72" edge="1" parent="1" source="N_SLA_36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_SLA_72" value="Over 36h">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_S36_STDB" edge="1" parent="1" source="N_SLA_36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_STATE_DB" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_S72_CTDB" edge="1" parent="1" source="N_SLA_72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_CENTRAL_DB" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="N_PROOF_CHK" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Proof Checking" vertex="1">
+          <mxGeometry height="35" width="150" x="1065" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="N_PRR" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" value="Problem Resolve Re-evaluation&#xa;(PRR Engine)" vertex="1">
+          <mxGeometry height="45" width="240" x="1070" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="N_CTX_MATCH" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Exact Problem Context Match Scenarios" vertex="1">
+          <mxGeometry height="35" width="240" x="1070" y="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="E_S24_PRR" edge="1" parent="1" source="N_SLA_24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PROOF_CHK" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_STDB_PRR" edge="1" parent="1" source="N_STATE_DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PRR" value="">
+          <mxGeometry as="geometry">
+            <Array as="points">
+              <mxPoint x="1345" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_CTDB_PRR" edge="1" parent="1" source="N_CENTRAL_DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PRR" value="">
+          <mxGeometry as="geometry">
+            <Array as="points">
+              <mxPoint x="1345" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_PRF_PRR" edge="1" parent="1" source="N_PROOF_CHK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PRR" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_CTX_PRR" edge="1" parent="1" source="N_CTX_MATCH" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" target="N_PRR" value="">
+          <mxGeometry as="geometry" />
+        </mxCell>
+        <mxCell id="E_PRR_RES" edge="1" parent="1" source="N_PRR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#27ae60;fontColor=#27ae60;fontStyle=1;" target="N_RESOLVED" value="Validated">
+          <mxGeometry as="geometry">
+            <Array as="points">
+              <mxPoint x="1570" y="967" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_PRR_SALT" edge="1" parent="1" source="N_PRR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashPattern=1 3;dashed=1;strokeWidth=2;strokeColor=#666666;" target="N_SALTING" value="Re-sync Status">
+          <mxGeometry as="geometry">
+            <Array as="points">
+              <mxPoint x="1660" y="967" />
+              <mxPoint x="1660" y="80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

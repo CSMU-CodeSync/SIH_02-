@@ -1,0 +1,8 @@
+# Git Ignore for SIH_02
+prompt_eng_repo/
+decoded_diagram.xml
+*.png
+*.log
+__pycache__/
+.env
+venv/
