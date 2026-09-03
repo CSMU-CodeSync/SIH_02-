@@ -1,4 +1,4 @@
-# SIH 02: Complaint Resolution System — Frontend Implementation Guide
+# SIH 02: Grievance Prioritization System — Front End 
 
 ---
 
@@ -15,6 +15,7 @@ cd sih02-frontend
 npm install @tanstack/react-query @tanstack/react-query-devtools zustand clsx tailwind-merge lucide-react framer-motion axios zod react-hook-form @hookform/resolvers
 npm install @radix-ui/react-dialog @radix-ui/react-tabs @radix-ui/react-dropdown-menu @radix-ui/react-toast @radix-ui/react-tooltip @radix-ui/react-progress @radix-ui/react-accordion
 npm install recharts leaflet react-leaflet @types/leaflet
+npm install react-leaflet-cluster
 npm install -D tailwindcss postcss autoprefixer @types/node
 ```
 
@@ -459,7 +460,225 @@ export const SlaCountdown: React.FC<SlaCountdownProps> = ({ deadline, stage }) =
 
 ---
 
-## 9. Verification & Testing Checklist
+## 9. Analytics Dashboard and Visual Components
+
+The following components make every chart named in the architecture visible from one responsive SRCS dashboard. The dashboard uses a 12-column grid on desktop and one column on mobile.
+
+### 9.1 Dashboard route and data contract
+
+Route: `/srcs/analytics`
+
+```typescript
+export interface MapPoint {
+  id: string;
+  trackingHash: string;
+  latitude: number;
+  longitude: number;
+  priority: PriorityLevel;
+  department: DepartmentId;
+  status: SlaStage;
+  createdAt: string;
+}
+
+export interface AnalyticsSnapshot {
+  totals: {
+    open: number;
+    resolved: number;
+    breached: number;
+    averageResolutionHours: number;
+  };
+  dailyVolume: Array<{ date: string; received: number; resolved: number }>;
+  departmentVelocity: Array<{
+    department: DepartmentId;
+    open: number;
+    resolved: number;
+    averageResolutionHours: number;
+  }>;
+  slaDistribution: Array<{
+    stage: SlaStage;
+    count: number;
+  }>;
+  mapPoints: MapPoint[];
+}
+```
+
+The page must show the selected date range, department filter, refresh state, last-updated timestamp, and an accessible empty state. Every request must be scoped to the authenticated user's role.
+
+### 9.2 Required chart components
+
+Create these components under `src/features/analytics/components/`:
+
+| Component | Chart | Visible information |
+| --- | --- | --- |
+| `ComplaintVolumeChart` | Recharts `AreaChart` | Received versus resolved complaints by day |
+| `DepartmentVelocityChart` | Recharts `BarChart` | Open, resolved, and average resolution hours per department |
+| `SlaDistributionChart` | Recharts `PieChart` | Normal, state escalation, central escalation, and resolved counts |
+| `SlaThresholdGauge` | CSS conic gauge | Current percentage within each 24h, 36h, and 72h threshold |
+| `ComplaintHeatmap` | Leaflet map with clustered circles | Geographic complaint density and priority |
+
+Example chart implementation:
+
+```tsx
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+interface ComplaintVolumeChartProps {
+  data: Array<{ date: string; received: number; resolved: number }>;
+}
+
+export function ComplaintVolumeChart({ data }: ComplaintVolumeChartProps) {
+  return (
+    <section aria-labelledby="complaint-volume-title" className="min-w-0">
+      <h2 id="complaint-volume-title" className="text-base font-semibold">Complaint volume</h2>
+      <div className="h-72 min-h-72 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Area dataKey="received" name="Received" stroke="#2563eb" fill="#bfdbfe" />
+            <Area dataKey="resolved" name="Resolved" stroke="#16a34a" fill="#bbf7d0" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+```
+
+The gauge must expose the same value as text for screen readers. Use green for under 24 hours, amber for 24 to 36 hours, orange for 36 to 72 hours, and red for over 72 hours. Do not communicate status by color alone.
+
+### 9.3 Heatmap behavior
+
+`ComplaintHeatmap` must:
+
+- Use `react-leaflet` with a fixed `min-h-80` map region so the layout cannot collapse while tiles load.
+- Cluster nearby complaints and show a count at low zoom.
+- Show a detail popup with tracking hash, priority, department, status, and created time.
+- Include a legend for priority levels and a visible loading, error, and no-location state.
+- Avoid exposing encrypted complaint details or personally identifiable information.
+
+## 10. Tables, Queues, and Tracking Views
+
+### 10.1 Shared table component
+
+Create `src/components/DataTable.tsx` with typed columns and these required behaviors:
+
+```typescript
+export interface DataTableColumn<Row> {
+  key: string;
+  header: string;
+  render: (row: Row) => React.ReactNode;
+  sortable?: boolean;
+}
+
+interface DataTableProps<Row> {
+  rows: Row[];
+  columns: DataTableColumn<Row>[];
+  rowKey: (row: Row) => string;
+  loading?: boolean;
+  errorMessage?: string;
+  emptyMessage: string;
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  filterControls?: React.ReactNode;
+  page?: number;
+  pageCount?: number;
+  onPageChange?: (page: number) => void;
+}
+```
+
+The table must support keyboard focus, column sorting, server-side pagination, search, department/priority/status filters, a mobile stacked-row layout, and an explicit empty state. Keep tracking hashes and status visible; never render encrypted details in a list.
+
+### 10.2 Required table and queue routes
+
+| Route | Component | Required columns or content |
+| --- | --- | --- |
+| `/srcs/audit` | `AuditTrailTable` | Event time, tracking hash, actor role, action, source system, result, correlation ID |
+| `/officer/dep_01` | `DepartmentKanban` | New, assigned, in progress, awaiting proof, resolved; each card shows priority, SLA badge, hash, and assignee |
+| `/officer/dep_02` | `PipelineLedgerTable` | Tracking hash, category, priority, stage, owner, SLA deadline, last update, action |
+| `/officer/dep_03` | `OutageSafetyQueue` | Safety flag, outage area, priority, assigned crew, SLA deadline, escalation stage, action |
+| `/srcs/dispatch` | `DispatchLogTable` | Dispatched at, destination DBMS, tracking hash, escalation stage, HTTP result, retry count, last error |
+| `/track/:trackingHash` | `ComplaintTimeline` | Submitted, classified, assigned, escalated, proof received, resolved/closed |
+
+`DepartmentKanban` is the only drag-and-drop view. Dragging a card must call `PATCH /complaints/:id/status`, preserve the server response as the source of truth, and show an error toast if the update fails. The other department views are tables because they need sorting, pagination, and auditability.
+
+### 10.3 Audit and dispatch log example
+
+```tsx
+const auditColumns: DataTableColumn<AuditEvent>[] = [
+  { key: 'createdAt', header: 'Time', render: (row) => formatDate(row.createdAt), sortable: true },
+  { key: 'trackingHash', header: 'Tracking hash', render: (row) => row.trackingHash },
+  { key: 'actorRole', header: 'Actor', render: (row) => row.actorRole },
+  { key: 'action', header: 'Action', render: (row) => row.action, sortable: true },
+  { key: 'source', header: 'Source', render: (row) => row.sourceSystem },
+  { key: 'result', header: 'Result', render: (row) => <StatusBadge value={row.result} /> },
+  { key: 'correlationId', header: 'Correlation ID', render: (row) => row.correlationId },
+];
+
+export function AuditTrailTable({ rows }: { rows: AuditEvent[] }) {
+  return (
+    <DataTable
+      rows={rows}
+      columns={auditColumns}
+      rowKey={(row) => row.correlationId}
+      emptyMessage="No audit events match the selected filters."
+    />
+  );
+}
+```
+
+### 10.4 Citizen progress timeline
+
+`ComplaintTimeline` renders a vertical stepper on mobile and a horizontal stepper on desktop. It must mark the current stage, show completed timestamps, display escalation handoffs to State or Central DBMS, and show a plain-language error state when a complaint cannot be found. The timeline is read-only for citizens.
+
+## 11. Visible Dashboard Layout
+
+```tsx
+export function SrcsAnalyticsPage({ snapshot }: { snapshot: AnalyticsSnapshot }) {
+  return (
+    <main className="space-y-6 p-4 lg:p-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-slate-500">SRCS operations</p>
+          <h1 className="text-2xl font-bold">Grievance analytics</h1>
+        </div>
+        <AnalyticsFilters />
+      </header>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Summary metrics">
+        <MetricCard label="Open" value={snapshot.totals.open} />
+        <MetricCard label="Resolved" value={snapshot.totals.resolved} />
+        <MetricCard label="SLA breached" value={snapshot.totals.breached} />
+        <MetricCard label="Average resolution" value={`${snapshot.totals.averageResolutionHours}h`} />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <ComplaintVolumeChart data={snapshot.dailyVolume} />
+        <DepartmentVelocityChart data={snapshot.departmentVelocity} />
+        <SlaDistributionChart data={snapshot.slaDistribution} />
+        <SlaThresholdGauge data={snapshot.slaDistribution} />
+      </section>
+
+      <ComplaintHeatmap points={snapshot.mapPoints} />
+    </main>
+  );
+}
+```
+
+This layout makes all five analytics visuals visible without horizontal scrolling. On narrow screens, charts stack in document order and each chart retains a stable height.
+
+## 12. Verification & Testing Checklist
 
 - [x] **Sub-50ms Lookup Speed**: Verify Redis caching headers (`X-Cache: HIT`) for `/complaints/track/:trackingHash`.
 - [x] **Client AES-256-GCM Encryption**: Confirm that grievance text is encrypted before transmission and matches Flask's `EncryptionBarrierService`.
@@ -467,3 +686,446 @@ export const SlaCountdown: React.FC<SlaCountdownProps> = ({ deadline, stage }) =
 - [x] **Department Schema Separation**: Validate that officers in `dep_01` cannot read or mutate complaints in `dep_02` or `dep_03`.
 - [x] **SRCS 24h/36h/72h SLA State Transitions**: Test simulated Celery cron task triggers and verify State & Central DBMS audit logs.
 - [x] **PRR Vision Verification**: Validate multimodal visual proof comparison with confidence score thresholds ($\ge 85\%$ for auto-pass).
+- [ ] **Analytics visibility**: Render the analytics route at desktop and mobile widths; verify all five charts, filters, summary metrics, loading, empty, and error states.
+- [ ] **Table visibility**: Verify audit, pipeline, outage, and dispatch tables render their required columns and become stacked rows on mobile.
+- [ ] **Kanban workflow**: Verify department cards move only after a successful server response and return to their previous column on failure.
+- [ ] **Heatmap privacy**: Verify map popups contain no encrypted details or personally identifiable information.
+- [ ] **Citizen timeline**: Verify every SLA handoff and resolution event is visible with timestamps.
+
+
+---
+
+## 13. Visibility Hardening Patch
+
+Apply this patch to ensure all analytics, maps, tables, queues, and related information remain visible at desktop and mobile sizes.
+
+### 13.1 Global layout and Leaflet CSS (`src/index.css`)
+
+```css
+@import "leaflet/dist/leaflet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  min-height: 20rem;
+}
+```
+
+Do not put dashboard routes inside a parent using `h-screen overflow-hidden`, `h-0`, `max-h-0`, `hidden`, `invisible`, or `opacity-0` unless that state is deliberately controlled.
+
+### 13.2 Visible analytics route (`src/features/analytics/SrcsAnalyticsPage.tsx`)
+
+```tsx
+import {
+  ComplaintVolumeChart,
+  DepartmentVelocityChart,
+  SlaDistributionChart,
+  SlaThresholdGauge,
+  ComplaintHeatmap,
+} from './components';
+
+interface SrcsAnalyticsPageProps {
+  snapshot: AnalyticsSnapshot;
+}
+
+export function SrcsAnalyticsPage({ snapshot }: SrcsAnalyticsPageProps) {
+  return (
+    <main className="min-h-screen w-full overflow-x-hidden bg-slate-50 p-4 text-slate-900 lg:p-6">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-slate-500">SRCS operations</p>
+          <h1 className="text-2xl font-bold text-slate-900">Grievance analytics</h1>
+        </div>
+        <AnalyticsFilters />
+      </header>
+
+      <section className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Summary metrics">
+        <MetricCard label="Open" value={snapshot.totals.open} />
+        <MetricCard label="Resolved" value={snapshot.totals.resolved} />
+        <MetricCard label="SLA breached" value={snapshot.totals.breached} />
+        <MetricCard label="Average resolution" value={`${snapshot.totals.averageResolutionHours}h`} />
+      </section>
+
+      <section className="grid min-w-0 gap-6 lg:grid-cols-2">
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <ComplaintVolumeChart data={snapshot.dailyVolume} />
+        </div>
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <DepartmentVelocityChart data={snapshot.departmentVelocity} />
+        </div>
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <SlaDistributionChart data={snapshot.slaDistribution} />
+        </div>
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <SlaThresholdGauge data={snapshot.slaDistribution} />
+        </div>
+      </section>
+
+      <section className="mt-6 min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <ComplaintHeatmap points={snapshot.mapPoints} />
+      </section>
+    </main>
+  );
+}
+```
+
+### 13.3 Stable Recharts pattern
+
+Use the same outer structure for every Recharts component. `min-w-0` prevents grid overflow, while `h-72` prevents `ResponsiveContainer` from rendering with zero height.
+
+```tsx
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+interface ComplaintVolumeChartProps {
+  data: Array<{ date: string; received: number; resolved: number }>;
+}
+
+export function ComplaintVolumeChart({ data }: ComplaintVolumeChartProps) {
+  if (data.length === 0) {
+    return (
+      <section className="min-w-0" aria-labelledby="complaint-volume-title">
+        <h2 id="complaint-volume-title" className="mb-4 text-base font-semibold">Complaint volume</h2>
+        <div className="flex h-72 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">
+          No complaint-volume data is available for the selected filters.
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="min-w-0" aria-labelledby="complaint-volume-title">
+      <h2 id="complaint-volume-title" className="mb-4 text-base font-semibold">Complaint volume</h2>
+      <div className="h-72 min-h-72 w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Area type="monotone" dataKey="received" name="Received" stroke="#2563eb" fill="#bfdbfe" />
+            <Area type="monotone" dataKey="resolved" name="Resolved" stroke="#16a34a" fill="#bbf7d0" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+```
+
+For `BarChart` and `PieChart`, use the exact same `div` class:
+
+```tsx
+<div className="h-72 min-h-72 w-full min-w-0">
+  <ResponsiveContainer width="100%" height="100%">
+    {/* BarChart or PieChart */}
+  </ResponsiveContainer>
+</div>
+```
+
+### 13.4 Visible heatmap (`src/features/analytics/components/ComplaintHeatmap.tsx`)
+
+```tsx
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
+import type { MapPoint } from '../../../types';
+
+const priorityColor: Record<MapPoint['priority'], string> = {
+  'P1-CRITICAL': '#dc2626',
+  'P2-HIGH': '#ea580c',
+  'P3-MEDIUM': '#eab308',
+  'P4-LOW': '#16a34a',
+};
+
+interface ComplaintHeatmapProps {
+  points: MapPoint[];
+  loading?: boolean;
+  error?: string;
+}
+
+export function ComplaintHeatmap({ points, loading = false, error }: ComplaintHeatmapProps) {
+  if (loading) {
+    return <div className="flex min-h-80 items-center justify-center text-sm text-slate-500" role="status">Loading complaint locations...</div>;
+  }
+
+  if (error) {
+    return <div className="flex min-h-80 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700" role="alert">{error}</div>;
+  }
+
+  if (points.length === 0) {
+    return (
+      <section className="min-w-0" aria-labelledby="complaint-map-title">
+        <h2 id="complaint-map-title" className="mb-4 text-base font-semibold">Complaint heatmap</h2>
+        <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">
+          No complaint locations are available for the selected filters.
+        </div>
+      </section>
+    );
+  }
+
+  const center: [number, number] = [points[0].latitude, points[0].longitude];
+
+  return (
+    <section className="min-w-0" aria-labelledby="complaint-map-title">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 id="complaint-map-title" className="text-base font-semibold">Complaint heatmap</h2>
+        <p className="text-xs text-slate-500">Markers show priority; popups exclude encrypted details and personal data.</p>
+      </div>
+
+      <div className="relative h-96 min-h-80 w-full overflow-hidden rounded-lg border border-slate-200">
+        <MapContainer center={center} zoom={12} className="z-0 h-full w-full" style={{ height: '100%', width: '100%' }}>
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MarkerClusterGroup chunkedLoading>
+            {points.map((point) => (
+              <CircleMarker
+                key={point.id}
+                center={[point.latitude, point.longitude]}
+                radius={8}
+                pathOptions={{ color: priorityColor[point.priority], fillOpacity: 0.75 }}
+              >
+                <Popup>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Tracking hash:</strong> {point.trackingHash}</p>
+                    <p><strong>Priority:</strong> {point.priority}</p>
+                    <p><strong>Department:</strong> {point.department}</p>
+                    <p><strong>Status:</strong> {point.status}</p>
+                    <p><strong>Created:</strong> {new Date(point.createdAt).toLocaleString()}</p>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
+      </div>
+    </section>
+  );
+}
+```
+
+### 13.5 Fully visible reusable table (`src/components/DataTable.tsx`)
+
+```tsx
+import React, { useMemo, useState } from 'react';
+
+export interface DataTableColumn<Row> {
+  key: string;
+  header: string;
+  render: (row: Row) => React.ReactNode;
+  sortable?: boolean;
+  sortValue?: (row: Row) => string | number;
+}
+
+interface DataTableProps<Row> {
+  rows: Row[];
+  columns: DataTableColumn<Row>[];
+  rowKey: (row: Row) => string;
+  loading?: boolean;
+  emptyMessage: string;
+}
+
+export function DataTable<Row>({
+  rows,
+  columns,
+  rowKey,
+  loading = false,
+  errorMessage,
+  emptyMessage,
+  search,
+  onSearchChange,
+  filterControls,
+  page,
+  pageCount,
+  onPageChange,
+}: DataTableProps<Row>) {
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [direction, setDirection] = useState<'asc' | 'desc'>('asc');
+
+  const sortedRows = useMemo(() => {
+    if (!sortKey) return rows;
+    const column = columns.find((item) => item.key === sortKey);
+    if (!column?.sortValue) return rows;
+
+    return [...rows].sort((a, b) => {
+      const left = column.sortValue!(a);
+      const right = column.sortValue!(b);
+      const result = typeof left === 'number' && typeof right === 'number'
+        ? left - right
+        : String(left).localeCompare(String(right));
+      return direction === 'asc' ? result : -result;
+    });
+  }, [rows, columns, sortKey, direction]);
+
+  const sortBy = (column: DataTableColumn<Row>) => {
+    if (!column.sortable || !column.sortValue) return;
+    if (sortKey === column.key) {
+      setDirection((value) => (value === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortKey(column.key);
+    setDirection('asc');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-40 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500" role="status">
+        Loading records...
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="flex min-h-40 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700" role="alert">
+        {errorMessage}
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <section className="space-y-3">
+      {(onSearchChange || filterControls) && (
+        <div className="flex flex-wrap items-center gap-3">
+          {onSearchChange && (
+            <label className="flex min-w-56 flex-1 items-center gap-2 text-sm text-slate-700">
+              <span className="sr-only">Search records</span>
+              <input
+                value={search ?? ''}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Search records"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              />
+            </label>
+          )}
+          {filterControls}
+        </div>
+      )}
+
+      <div className="hidden w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+      <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+        <thead className="bg-slate-100 text-slate-700">
+          <tr>
+            {columns.map((column) => (
+              <th key={column.key} scope="col" className="whitespace-nowrap px-4 py-3 font-semibold">
+                {column.sortable && column.sortValue ? (
+                  <button
+                    type="button"
+                    onClick={() => sortBy(column)}
+                    className="inline-flex items-center gap-1 rounded outline-none hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+                    aria-sort={sortKey === column.key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  >
+                    {column.header}
+                    <span aria-hidden="true">{sortKey === column.key ? (direction === 'asc' ? '▲' : '▼') : '↕'}</span>
+                  </button>
+                ) : column.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200">
+          {sortedRows.map((row) => (
+            <tr key={rowKey(row)} className="hover:bg-slate-50 focus-within:bg-blue-50">
+              {columns.map((column) => (
+                <td key={column.key} className="whitespace-nowrap px-4 py-3 text-slate-700">
+                  {column.render(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {sortedRows.map((row) => (
+          <article key={rowKey(row)} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            {columns.map((column) => (
+              <div key={column.key} className="flex items-start justify-between gap-4 border-b border-slate-100 py-2 last:border-b-0">
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">{column.header}</span>
+                <span className="min-w-0 break-words text-right text-sm text-slate-800">{column.render(row)}</span>
+              </div>
+            ))}
+          </article>
+        ))}
+      </div>
+
+      {page && pageCount && pageCount > 1 && onPageChange && (
+        <nav className="flex items-center justify-between text-sm" aria-label="Table pagination">
+          <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="rounded px-3 py-2 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-40">Previous</button>
+          <span>Page {page} of {pageCount}</span>
+          <button type="button" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)} className="rounded px-3 py-2 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-40">Next</button>
+        </nav>
+      )}
+    </section>
+  );
+}
+```
+
+The `overflow-x-auto` wrapper retains all columns, and the `min-w-[900px]` table width ensures long audit, dispatch, and pipeline tables do not collapse or hide fields.
+
+### 13.6 Mobile stacked table behavior
+
+`DataTable` now renders the same rows as stacked records below the `md` breakpoint while retaining the sortable desktop table above it. Use the following pattern only for custom table layouts that do not use `DataTable`:
+
+```tsx
+<div className="hidden md:block">
+  <DataTable rows={rows} columns={columns} rowKey={(row) => row.id} emptyMessage="No records found." />
+</div>
+
+<div className="space-y-3 md:hidden">
+  {rows.map((row) => (
+    <article key={row.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      {columns.map((column) => (
+        <div key={column.key} className="flex items-start justify-between gap-4 border-b border-slate-100 py-2 last:border-b-0">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">{column.header}</span>
+          <span className="min-w-0 break-words text-right text-sm text-slate-800">{column.render(row)}</span>
+        </div>
+      ))}
+    </article>
+  ))}
+</div>
+```
+
+### 13.7 Required checks
+
+- Every `ResponsiveContainer` has a parent with `h-72 min-h-72 w-full min-w-0`.
+- Every Leaflet map has a `h-96 min-h-80 w-full` parent and Leaflet CSS is loaded.
+- Every wide table is inside `w-full overflow-x-auto` and has a `min-w-*` width.
+- Every data section renders a visible loading, empty, and error state.
+- No dashboard ancestor clips content with `overflow-hidden` or limits its height.
+- Dark containers always specify readable text colors such as `text-white` and `text-slate-300`.
