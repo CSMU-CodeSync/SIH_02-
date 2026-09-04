@@ -7,66 +7,74 @@ By leveraging **NGINX Load Balancing**, **Redis In-Memory Caching**, dual-layer 
 
 ---
 
-## 2. Target Audience & Core Use Cases
-- **Citizens (Complainants)**: Submit complaints, receive instant AI-classified priority, and track status in real-time via cached lookups without system delay.
-- **Departmental Officers (`dep_01`, `dep_02`, `dep_03`)**: View routed complaints, submit resolution proofs, and manage department-level complaint tables.
-- **System Administrators & Auditors**: Monitor SLA breach timelines (24h/36h/72h), oversee automatic escalation to State and Central DBMS, and run PRR (Problem Resolve Re-evaluation) verifications.
+## 2. Master System Architecture Topology
 
----
-
-## 3. Core System Architecture & Backend Modules
+Every requirement and API module in this document maps directly to the system architecture topology below:
 
 ```mermaid
 flowchart TD
- Client[Citizen / API Client] --> NGINX[NGINX Load Balancer]
- NGINX --> FlaskAPI[Flask API Gateway]
- 
- subgraph Security & Ingestion
- FlaskAPI --> Auth[User Session & Auth Re-verify]
- Auth <--> Redis[Redis Cache & Session Store]
- FlaskAPI --> EncBarrier[Encryption Barrier]
- EncBarrier --> Tracking[Tracking Complaint System]
- Tracking --> SaltBarrier[Encryption Salting Barrier]
- end
+    Client[Citizen / API Client] -->|HTTPS Requests| NGINX[NGINX Load Balancer]
+    NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
+    
+    subgraph Authentication & Fast Memory
+        Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
+        Flask --> Auth[User Session ID & Auth Re-verify]
+    end
 
- subgraph AI Intelligence Engine
- FlaskAPI --> CtxAnalysis[Context Analysis]
- FlaskAPI --> ReEval[Re-evaluation of Complaint]
- FlaskAPI --> Priority[Priority Classification]
- CtxAnalysis & ReEval & Priority <--> Gemini[Gemini 2.5 Flash LLM]
- end
+    subgraph Security & Ingestion Barriers
+        Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
+        EncBarrier --> Tracking[Tracking Complaint System]
+        Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
+    end
 
- subgraph Routing & Departmental DBs
- FlaskAPI --> MainDB[(Main Database / main_db)]
- MainDB --> Dep1[(dep_01 DB)] & Dep2[(dep_02 DB)] & Dep3[(dep_03 DB)]
- Dep1 --> Int1[dep_01 Interface]
- Dep2 --> Int2[dep_02 Interface]
- Dep3 --> Int3[dep_03 Interface]
- end
+    subgraph AI Intelligence Engine
+        Flask --> CtxAnalysis[Context Analysis]
+        Flask --> ReEval[Re-evaluation of Complaint]
+        Flask --> Priority[Priority Classification P1-P4]
+        CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
+    end
 
- subgraph SRCS (Stage Resolve Commit System)
- Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
- ResCheck -- YES --> Resolved[Complaint Resolved & Closed]
- ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
- SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1)]
- SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2)]
- 
- SLA24 & StateDB & CentralDB --> PRR[PRR Engine & Proof Checking]
- PRR -- Validated --> Resolved
- PRR -. Re-sync .-> SaltBarrier
- end
+    subgraph Core Ledger & Departmental Routing
+        Flask --> MainDB[(Main Database - main_db)]
+        MainDB --> Dep1[(dep_01 Database)]
+        MainDB --> Dep2[(dep_02 Database)]
+        MainDB --> Dep3[(dep_03 Database)]
+        Dep1 --> Int1[dep_01 Interface]
+        Dep2 --> Int2[dep_02 Interface]
+        Dep3 --> Int3[dep_03 Interface]
+    end
+
+    subgraph SRCS - Stage Resolve Commit System
+        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+        ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
+        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
+        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+        
+        SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
+        PRR -- Validated --> Resolved
+        PRR -. Status Re-sync .-> SaltBarrier
+    end
 ```
+
+---
+
+## 3. Target Audience & Core Use Cases
+- **Citizens (Complainants)**: Submit complaints, receive instant AI-classified priority, and track status in real-time via Redis-cached lookups without hitting `main_db`.
+- **Departmental Officers (`dep_01`, `dep_02`, `dep_03`)**: View routed complaints in isolated department tables, submit resolution proofs, and update statuses.
+- **System Administrators & Auditors**: Monitor SLA breach timelines (24h/36h/72h), oversee automatic escalation to State Gov. DBMS (L1) and Central Gov. DBMS (L2), and run PRR (Problem Resolve Re-evaluation) verifications.
 
 ---
 
 ## 4. Key Feature Specifications & API Endpoints
 
 ### 4.1 Ingestion & Authentication API
-- **`POST /api/v1/auth/verify`**: Validates citizen session token via **Redis Session Store**.
-- **`POST /api/v1/complaints/submit`**: Encrypts payload via **Encryption Barrier** (AES-256-GCM), assigns tracking hash, and pushes to pipeline.
+- **`POST /api/v1/auth/verify`**: Validates citizen session token via **Redis Session Store** (sub-millisecond response).
+- **`POST /api/v1/auth/reverify`**: Requires password/OTP re-verification before critical SRCS state changes.
+- **`POST /api/v1/complaints/submit`**: Encrypts payload via **Encryption Barrier** (AES-256-GCM), assigns tracking hash salted via **Encryption Salting Barrier**, and pushes to pipeline.
 
 ### 4.2 AI Context & Priority Engine (`/api/v1/ai/...`)
-- **`POST /api/v1/ai/analyze-context`**: Calls **Gemini 2.5 Flash LLM** to extract semantic keywords, category, and urgency.
+- **`POST /api/v1/ai/analyze-context`**: Calls **Gemini 2.5 Flash LLM** to extract semantic keywords, category, and urgency score.
 - **`POST /api/v1/ai/classify-priority`**: Automatically assigns priority (`P1-CRITICAL`, `P2-HIGH`, `P3-MEDIUM`, `P4-LOW`) based on Gemini analysis.
 
 ### 4.3 Routing & Departmental Interfaces
@@ -75,8 +83,8 @@ flowchart TD
 
 ### 4.4 SRCS (Stage Resolve Commit System) Engine
 - **`POST /api/v1/srcs/check-sla`**: Celery background task evaluating 24h, 36h, and 72h SLA boundaries.
-- **`POST /api/v1/srcs/escalate`**: Triggers state/central DBMS persistence upon SLA breach.
-- **`POST /api/v1/srcs/prr-verify`**: Runs **PRR (Problem Resolve Re-evaluation)** using Gemini LLM vision/text context match against submitted resolution proof.
+- **`POST /api/v1/srcs/escalate`**: Triggers **State Gov. DBMS (L1)** persistence at 36h breach and **Central Gov. DBMS (L2)** persistence at 72h breach.
+- **`POST /api/v1/srcs/prr-verify`**: Runs **PRR (Problem Resolve Re-evaluation)** using Gemini 2.5 Flash vision/text context match against submitted resolution proof.
 
 ---
 

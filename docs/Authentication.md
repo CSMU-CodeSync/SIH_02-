@@ -7,38 +7,90 @@ Identity management uses a hybrid model combining **Redis-backed session tokens*
 
 ---
 
-## 2. Authentication Flow Topology
+## 2. Authentication Context in System Architecture
+
+Authentication operates directly between NGINX, Flask API, Redis, and User Re-verification modules as shown in the system architecture topology:
 
 ```mermaid
-sequenceDiagram
- autonumber
- actor User as Citizen / Officer
- participant NGINX as NGINX Load Balancer
- participant Flask as Flask API Auth Blueprint
- participant Redis as Redis Session Store
- participant DB as main_db (PostgreSQL)
+flowchart TD
+    Client[Citizen / API Client] -->|HTTPS Requests| NGINX[NGINX Load Balancer]
+    NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
+    
+    subgraph Authentication & Fast Memory
+        Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
+        Flask --> Auth[User Session ID & Auth Re-verify]
+    end
 
- User->>NGINX: POST /api/v1/auth/login (Credentials / OTP)
- NGINX->>Flask: Forward Request + Client IP
- Flask->>DB: Validate User / Officer Hash (Argon2id)
- DB-->>Flask: Account Verified
- Flask->>Redis: SET session:<token> (TTL=86400s, JSON User Data)
- Redis-->>Flask: OK
- Flask-->>User: Return HTTP-Only Cookie + Session Token
+    subgraph Security & Ingestion Barriers
+        Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
+        EncBarrier --> Tracking[Tracking Complaint System]
+        Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
+    end
 
- Note over User, Redis: Subsequent Authenticated Requests
- User->>NGINX: POST /api/v1/complaints/submit (Bearer Session Token)
- NGINX->>Flask: Forward Request
- Flask->>Redis: GET session:<token>
- Redis-->>Flask: Session Data (User ID, Role, Permissions)
- Flask->>Flask: Execute Request (Context & Priority Engine)
+    subgraph AI Intelligence Engine
+        Flask --> CtxAnalysis[Context Analysis]
+        Flask --> ReEval[Re-evaluation of Complaint]
+        Flask --> Priority[Priority Classification P1-P4]
+        CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
+    end
+
+    subgraph Core Ledger & Departmental Routing
+        Flask --> MainDB[(Main Database - main_db)]
+        MainDB --> Dep1[(dep_01 Database)]
+        MainDB --> Dep2[(dep_02 Database)]
+        MainDB --> Dep3[(dep_03 Database)]
+        Dep1 --> Int1[dep_01 Interface]
+        Dep2 --> Int2[dep_02 Interface]
+        Dep3 --> Int3[dep_03 Interface]
+    end
+
+    subgraph SRCS - Stage Resolve Commit System
+        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+        ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
+        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
+        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+        
+        SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
+        PRR -- Validated --> Resolved
+        PRR -. Status Re-sync .-> SaltBarrier
+    end
 ```
 
 ---
 
-## 3. Flask Authentication & Re-verification Middleware
+## 3. Authentication Flow Sequence
 
-### 3.1 Session Verification Decorator (`app/api/auth.py`)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Citizen / Officer
+    participant NGINX as NGINX Load Balancer
+    participant Flask as Flask API Auth Blueprint
+    participant Redis as Redis Session Store
+    participant DB as main_db (PostgreSQL)
+
+    User->>NGINX: POST /api/v1/auth/login (Credentials / OTP)
+    NGINX->>Flask: Forward Request + Client IP
+    Flask->>DB: Validate User / Officer Hash (Argon2id)
+    DB-->>Flask: Account Verified
+    Flask->>Redis: SET session:<token> (TTL=86400s, JSON User Data)
+    Redis-->>Flask: OK
+    Flask-->>User: Return HTTP-Only Cookie + Session Token
+
+    Note over User, Redis: Subsequent Authenticated Requests
+    User->>NGINX: POST /api/v1/complaints/submit (Bearer Session Token)
+    NGINX->>Flask: Forward Request
+    Flask->>Redis: GET session:<token>
+    Redis-->>Flask: Session Data (User ID, Role, Permissions)
+    Flask->>Flask: Execute Request (Context & Priority Engine)
+```
+
+---
+
+## 4. Flask Authentication & Re-verification Middleware
+
+### 4.1 Session Verification Decorator (`app/api/auth.py`)
 
 ```python
 import functools
@@ -47,29 +99,27 @@ from flask import request, jsonify, g
 from app.extensions import redis_client
 
 def require_session(f):
- @functools.wraps(f)
- def decorated(*args, **kwargs):
- auth_header = request.headers.get("Authorization")
- if not auth_header or not auth_header.startswith("Bearer "):
- return jsonify({"error": "Unauthorized", "message": "Missing authentication token"}), 401
- 
- token = auth_header.split(" ")[1]
- session_key = f"session:{token}"
- 
- # Check Redis Cache (sub-millisecond response)
- session_data_raw = redis_client.get(session_key)
- if not session_data_raw:
- return jsonify({"error": "Unauthorized", "message": "Session expired or invalid"}), 401
- 
- # Load user context into Flask request global `g`
- g.current_user = json.loads(session_data_raw)
- return f(*args, **kwargs)
- return decorated
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized", "message": "Missing authentication token"}), 401
+        
+        token = auth_header.split(" ")[1]
+        session_key = f"session:{token}"
+        
+        # Check Redis Cache (sub-millisecond response)
+        session_data_raw = redis_client.get(session_key)
+        if not session_data_raw:
+            return jsonify({"error": "Unauthorized", "message": "Session expired or invalid"}), 401
+        
+        # Load user context into Flask request global `g`
+        g.current_user = json.loads(session_data_raw)
+        return f(*args, **kwargs)
+    return decorated
 ```
 
----
-
-## 4. User Re-Verification for Sensitive Actions
+### 4.2 User Re-Verification for Critical SRCS Actions
 
 When a citizen or departmental officer performs high-sensitivity actions (e.g. submitting resolution proof, triggering SRCS re-evaluation, or altering department parameters), the system requires **User Authentication Re-verify**:
 
@@ -77,20 +127,20 @@ When a citizen or departmental officer performs high-sensitivity actions (e.g. s
 @auth_bp.route("/reverify", methods=["POST"])
 @require_session
 def reverify_user():
- """Re-authenticates active user password/OTP before critical SRCS state change."""
- data = request.get_json()
- password = data.get("password")
- user_id = g.current_user["user_id"]
+    """Re-authenticates active user password/OTP before critical SRCS state change."""
+    data = request.get_json()
+    password = data.get("password")
+    user_id = g.current_user["user_id"]
 
- user = User.query.get(user_id)
- if not user or not user.verify_password(password):
- return jsonify({"success": False, "message": "Re-verification failed"}), 403
+    user = User.query.get(user_id)
+    if not user or not user.verify_password(password):
+        return jsonify({"success": False, "message": "Re-verification failed"}), 403
 
- # Generate short-lived re-auth token in Redis (Valid for 5 minutes)
- reverify_token = generate_secure_token()
- redis_client.setex(f"reverify:{user_id}", 300, reverify_token)
+    # Generate short-lived re-auth token in Redis (Valid for 5 minutes)
+    reverify_token = generate_secure_token()
+    redis_client.setex(f"reverify:{user_id}", 300, reverify_token)
 
- return jsonify({"success": True, "reverify_token": reverify_token}), 200
+    return jsonify({"success": True, "reverify_token": reverify_token}), 200
 ```
 
 ---
@@ -99,8 +149,8 @@ def reverify_user():
 
 | Parameter | Specification | Purpose |
 | :--- | :--- | :--- |
-| **Password Hashing** | `Argon2id` (memory_cost=65536, time_cost=3, parallelism=4) | State-of-the-art protection against GPU/ASIC cracking |
-| **Session Token Format** | Cryptographically secure 256-bit random hex string | Opaque token prevented from signature forgery |
-| **Redis Session TTL** | 24 Hours (86,400 seconds) | Automatic session invalidation |
-| **Re-verification TTL** | 5 Minutes (300 seconds) | Limits window for critical state changes |
-| **Rate Limiting** | 60 requests/min per IP via Redis Sliding Window | Prevents brute force and API flooding |
+| **Password Hashing** | `Argon2id` (memory_cost=65536, time_cost=3, parallelism=4) | Protection against GPU/ASIC password cracking. |
+| **Session Token Format** | Cryptographically secure 256-bit random hex string | Opaque token immune to signature forgery. |
+| **Redis Session TTL** | 24 Hours (86,400 seconds) | Automatic session invalidation. |
+| **Re-verification TTL** | 5 Minutes (300 seconds) | Limits window for critical SRCS state changes. |
+| **Rate Limiting** | 60 requests/min per IP via Redis Sliding Window | Prevents brute force and API flooding at NGINX & Flask layer. |
