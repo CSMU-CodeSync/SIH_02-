@@ -1,0 +1,239 @@
+<mxfile host="Electron" agent="Antigravity">
+  <diagram name="SIH02 Frontend UI-UX Architecture" id="sih02-frontend-ui-ux-master">
+    <mxGraphModel dx="769" dy="763" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3600" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TITLE_BANNER" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#0F172A;fontColor=#FFFFFF;fontStyle=1;fontSize=16;align=center;" value="SIH 02 — SMART COMPLAINT RESOLUTION SYSTEM (FRONTEND UI/UX &amp; API INTEGRATION ARCHITECTURE)&#xa;Master Frontend Architecture Specification • Citizen Portal, Department Officer Workspaces (dep_01..03), Admin &amp; Escalation Console • Backend API Contracts &amp; Data Flow" vertex="1">
+          <mxGeometry height="70" width="3500" x="50" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZONE_GLOBAL" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontStyle=1;fontSize=14;fontColor=#0F172A;startSize=30;rounded=1;" value="LAYER 1: GLOBAL UI SYSTEM &amp; CLIENT FOUNDATION" vertex="1">
+          <mxGeometry height="1020" width="680" x="50" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="G_NAVBAR" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2E8F0;strokeColor=#94A3B8;fontSize=11;fontColor=#1E293B;align=left;spacingLeft=10;" value="Top Navigation Bar &amp; Header&#xa;• Branding &amp; Logo (SIH-02 Portal)&#xa;• Language Selector (Multilingual: EN, HI, Regional)&#xa;• High-Contrast &amp; Dark/Light Mode Switcher&#xa;• Notification Center (Bell Icon + Badge Count)&#xa;• User Profile &amp; Role Switcher (Citizen / Officer / Admin)&#xa;• Quick Track Search Bar (Enter Tracking Token ID)" vertex="1">
+          <mxGeometry height="150" width="300" x="70" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="G_ROUTING" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;" value="Client-Side Router &amp; Route Guards&#xa;• Public Routes: / (Home), /track/:id, /submit, /faq&#xa;• Citizen Protected: /my-grievances, /profile, /appeal/:id&#xa;• Department Protected: /dept/dashboard, /dept/queue, /dept/ticket/:id&#xa;• Admin Protected: /admin/analytics, /admin/escalations, /admin/audit-logs&#xa;• Guards: AuthTokenVerifier, RoleCheck(dep_01/02/03/admin)" vertex="1">
+          <mxGeometry height="150" width="300" x="70" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="G_STATE_STORE" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=11;fontColor=#78350F;align=left;spacingLeft=10;" value="Global State Management (Zustand / Redux)&#xa;• AuthStore: { token, user, role, permissions, expiresAt }&#xa;• ComplaintDraftStore: { step, category, media, geo, aiPreCheck }&#xa;• TrackingCacheStore: { token_id, status, timeline, cachedAt }&#xa;• UIStore: { theme, lang, activeModal, toastNotifications }&#xa;• SLAStore: { activeTimers, breachAlerts, refreshInterval }" vertex="1">
+          <mxGeometry height="150" width="300" x="70" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="G_API_CLIENT" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#10B981;fontSize=11;fontColor=#064E3B;align=left;spacingLeft=10;" value="Unified API Client &amp; Interceptor Layer&#xa;• Base URL: /api/v1 (Forwarded via NGINX Reverse Proxy)&#xa;• Request Interceptor: Injects Authorization: Bearer &lt;token&gt;&#xa;• Session Re-verify Interceptor: Catches 401 &amp; triggers re-auth&#xa;• Rate-Limit Interceptor: Handles 429 &amp; Backoff Retry&#xa;• Offline Sync: Caches drafts in IndexedDB if network drops" vertex="1">
+          <mxGeometry height="150" width="300" x="70" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="G_COMMON_COMPONENTS" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#A855F7;fontSize=11;fontColor=#581C87;align=left;spacingLeft=10;arcSize=21;" value="Atomic UI &amp; Accessibility Component Kit&#xa;• Multi-step Wizard Progress Stepper&#xa;• Dynamic Geo-Location Picker (Leaflet / Mapbox &amp; GPS Auto-detect)&#xa;• Media &amp; Audio Voice Recorder (Web Audio API / WAV blob)&#xa;• SLA Countdown Clock &amp; Warning Badge (24h / 36h / 72h)&#xa;• AI Confidence &amp; Priority Tag Widget (Critical/High/Med/Low)&#xa;• Resolution Proof Viewer (Before/After Image Comparison Slider)&#xa;• Skeleton Loaders, Error Boundaries, Toast Notification Container" vertex="1">
+          <mxGeometry height="320" width="320" x="390" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="G_ACCESSIBILITY" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF2F8;strokeColor=#EC4899;fontSize=11;fontColor=#831843;align=left;spacingLeft=10;" value="Inclusivity &amp; Citizen Accessibility Layer&#xa;• WCAG 2.1 AA Compliant Color Contrast &amp; Font Scaling&#xa;• Voice Input &amp; Speech-to-Text for Illiterate/Rural Complainants&#xa;• Multilingual i18n Dictionary Engine (English, Hindi, Regional)&#xa;• Screen Reader ARIA Live Regions for Status Updates&#xa;• Mobile Responsive PWA (Progressive Web App) Support" vertex="1">
+          <mxGeometry height="180" width="320" x="390" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="G_SECURITY_UI" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontSize=11;fontColor=#7F1D1D;align=left;spacingLeft=10;" value="Frontend Security &amp; Data Protection&#xa;• Client-side Input Sanitization &amp; XSS Escaping&#xa;• Sensitive Data Masking (Aadhaar/Phone OTP digits)&#xa;• End-to-End Tracking Token Verification&#xa;• Automatic Session Timeout after Inactivity (Officer)" vertex="1">
+          <mxGeometry height="120" width="320" x="390" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="ZONE_CITIZEN" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;fontStyle=1;fontSize=14;fontColor=#14532D;startSize=30;rounded=1;" value="LAYER 2: CITIZEN (COMPLAINANT) PORTAL &amp; INGESTION UX FLOW" vertex="1">
+          <mxGeometry height="1020" width="880" x="760" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="C_HOME" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=11;fontColor=#14532D;align=left;spacingLeft=10;" value="1. Citizen Home &amp; Landing View (/)&#xa;• Quick Complaint Lodging CTA Button&#xa;• Hero Instant Status Search (Enter Token ID)&#xa;• Department Routing Directory (dep_01, dep_02, dep_03)&#xa;• Live Public Transparency Dashboard (Resolved vs Pending)&#xa;• Citizen Login / OTP Registration Modal Trigger" vertex="1">
+          <mxGeometry height="140" width="260" x="780" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="C_AUTH" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=11;fontColor=#14532D;align=left;spacingLeft=10;" value="2. Citizen Auth &amp; Verification (/auth)&#xa;• Mobile Number / Email Input&#xa;• 6-Digit OTP Verification Screen&#xa;• Auto-resend Timer (60s)&#xa;• Optional Guest Mode Submission&#xa;• Backend API: POST /api/v1/auth/otp/send&#xa;• Backend API: POST /api/v1/auth/otp/verify" vertex="1">
+          <mxGeometry height="150" width="260" x="780" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="C_WIZARD_CONTAINER" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;fontSize=12;fontStyle=1;fontColor=#14532D;startSize=25;rounded=1;" value="3. Multi-Step Complaint Submission Wizard (/submit)" vertex="1">
+          <mxGeometry height="470" width="560" x="1060" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="C_WIZ_S1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#4ADE80;fontSize=10;fontColor=#14532D;align=left;spacingLeft=8;" value="Step 1: Category &amp; Details&#xa;• Department Selector (dep_01: Infra, dep_02: Sanitation, dep_03: Utilities)&#xa;• Complaint Title &amp; Structured Description Text Area&#xa;• Voice-to-Text Audio Recording Widget (Speak in native language)&#xa;• Incident Date &amp; Time picker" vertex="1">
+          <mxGeometry height="130" width="250" x="1080" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="C_WIZ_S2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#4ADE80;fontSize=10;fontColor=#14532D;align=left;spacingLeft=8;" value="Step 2: Evidence &amp; Geo-Tagging&#xa;• Multi-file Upload (Photos, PDFs, Video, max 10MB)&#xa;• Image Preview Grid with Remove / Zoom&#xa;• Interactive Map Picker with &#39;Use My Current GPS Location&#39;&#xa;• Landmark, Street, Ward / Pincode fields" vertex="1">
+          <mxGeometry height="130" width="250" x="1350" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="C_WIZ_S3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=10;fontColor=#78350F;align=left;spacingLeft=8;" value="Step 3: Real-Time AI Pre-Analysis (Gemini 2.5 Flash)&#xa;• Real-time Context Analysis &amp; Category Validation&#xa;• AI Priority Classification Preview (Critical / High / Medium / Low)&#xa;• Estimated SLA Resolution Window (24h / 36h / 72h)&#xa;• Duplicate Complaint Detection Warning Banner&#xa;• Backend API: POST /api/v1/ai/pre-analyze" vertex="1">
+          <mxGeometry height="140" width="250" x="1080" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="C_WIZ_S4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=10;fontColor=#14532D;align=left;spacingLeft=8;" value="Step 4: Review &amp; Encrypted Submission&#xa;• Complainant Info &amp; Anonymity Toggle Option&#xa;• Summary of Inputs, Uploads &amp; Map Coordinates&#xa;• Agreement to Truthful Declaration&#xa;• Submit Button -&gt; Triggers AES-256 / Salting Barrier&#xa;• Backend API: POST /api/v1/complaints/submit" vertex="1">
+          <mxGeometry height="140" width="250" x="1350" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="C_SUBMIT_SUCCESS" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#10B981;fontSize=11;fontColor=#064E3B;align=left;spacingLeft=10;" value="4. Submission Success &amp; Token Card (/submit/success)&#xa;• Unique Tracking Token Generated (e.g. SIH26-MH-DEP01-89342)&#xa;• QR Code for Instant Mobile Scanning &amp; Sharing&#xa;• Download PDF Acknowledgment Slip&#xa;• SMS / WhatsApp Notification confirmation badge&#xa;• Direct Link to Real-Time Tracking Page" vertex="1">
+          <mxGeometry height="110" width="560" x="1060" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="C_TRACKER" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;" value="5. Real-Time Tracking &amp; Verification Timeline (/track/:token_id)&#xa;• Header: Complaint ID, Department Badge, Priority Tag, Submission Date&#xa;• Active SLA Countdown Timer (Time Remaining before Stage 1 / Stage 2 Escalation)&#xa;• Interactive 6-Stage Resolution Timeline:&#xa;    [1] Submitted -&gt; [2] Ingestion &amp; Security Check -&gt; [3] Assigned to Department Officer&#xa;    [4] Field Inspection &amp; Action -&gt; [5] SRCS Stage Commit -&gt; [6] Resolved / Re-evaluated&#xa;• Assigned Officer Contact &amp; Official Remarks Log&#xa;• Resolution Proof Gallery (Before vs After Photos verified by PRR)&#xa;• Backend API: GET /api/v1/complaints/track/{tracking_id} (Redis Cached)" vertex="1">
+          <mxGeometry height="170" width="840" x="780" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="C_APPEAL" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;fontSize=11;fontColor=#991B1B;align=left;spacingLeft=10;" value="6. Feedback, Rating &amp; PRR Appeal Submission (/track/:id/appeal)&#xa;• Citizen Satisfaction Rating (1 to 5 Stars) &amp; Comments&#xa;• &#39;Not Satisfied? Request Re-evaluation (PRR Engine)&#39; Button&#xa;• Dispute Reason &amp; Counter-Evidence Image Upload Modal&#xa;• Backend API: POST /api/v1/srcs/appeal (Triggers Gemini 2.5 Flash Vision PRR Check)" vertex="1">
+          <mxGeometry height="130" width="840" x="780" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="ZONE_OFFICER" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;fontStyle=1;fontSize=14;fontColor=#1E3A8A;startSize=30;rounded=1;" value="LAYER 3: DEPARTMENT OFFICER WORKSPACE (dep_01, dep_02, dep_03)" vertex="1">
+          <mxGeometry height="1020" width="900" x="1670" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="O_AUTH" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;arcSize=25;" value="1. Department Officer Login (/dept/login)&#xa;• Officer Govt ID / Username &amp; Password (Argon2id Hash)&#xa;• Department Selection (dep_01 / dep_02 / dep_03)&#xa;• 2FA Security Token Verification&#xa;• Backend API: POST /api/v1/auth/officer/login&#xa;• Response: JWT + Redis Session Token + Department Scope" vertex="1">
+          <mxGeometry height="140" width="270" x="1690" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="O_DASHBOARD" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;" value="2. Department Triage Dashboard (/dept/dashboard)&#xa;• Department Header with Real-Time Notification Badge&#xa;• Metric KPI Cards: Total Assigned | Pending | Critical | SLA Breaching &lt; 4h&#xa;• Escalation Alert Ticker (Complaints nearing 24h L0, 36h L1 State DBMS)&#xa;• Quick Filter: Priority (Critical, High, Med, Low), Status, Ward/Zone&#xa;• Backend API: GET /api/v1/departments/{dep_id}/metrics" vertex="1">
+          <mxGeometry height="140" width="570" x="1980" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="O_QUEUE" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;" value="3. Department Grievance Queue &amp; Table (/dept/queue)&#xa;• Paginated &amp; Sortable Complaint Ledger Table&#xa;• Columns: Token ID | Date | Category | AI Priority Badge | Live SLA Timer | Status | Action&#xa;• Dynamic Color Coding: Red = SLA Breached / Critical, Amber = &lt; 6h Left, Green = Normal&#xa;• Batch Actions: Assign to Field Staff, Export CSV/Excel&#xa;• Backend API: GET /api/v1/departments/{dep_id}/complaints?page=1&amp;priority=critical" vertex="1">
+          <mxGeometry height="150" width="860" x="1690" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="O_DETAIL" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;fontSize=11;fontColor=#0F172A;align=left;spacingLeft=10;" value="4. Complaint Detail &amp; Investigation Workspace (/dept/ticket/:id)&#xa;• Left Panel: Citizen Complaint Info, Voice Recording Audio Player, Geo-location Map Pin&#xa;• Center Panel: Gemini 2.5 Flash Context Analysis, Extracted Keywords, Urgency Score&#xa;• Right Panel: Action &amp; Resolution Center (SRCS Stage Engine Controls)&#xa;• Activity Audit Trail: Timestamped log of all officer actions &amp; status updates&#xa;• Backend API: GET /api/v1/departments/{dep_id}/complaints/{id}" vertex="1">
+          <mxGeometry height="170" width="860" x="1690" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="O_SRCS_ACTIONS" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=12;fontStyle=1;fontColor=#78350F;startSize=25;rounded=1;" value="5. SRCS Stage Resolve &amp; Commit Module (/dept/ticket/:id/resolve)" vertex="1">
+          <mxGeometry height="200" width="560" x="1690" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="O_SRCS_STAGE1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;fontSize=10;fontColor=#78350F;align=left;spacingLeft=5;" value="Stage 1: Acknowledge &amp; Assign&#xa;• Set In-Progress Status&#xa;• Assign Field Officer / Unit&#xa;• API: POST /api/v1/srcs/acknowledge" vertex="1">
+          <mxGeometry height="70" width="250" x="1705" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="O_SRCS_STAGE2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;fontSize=10;fontColor=#78350F;align=left;spacingLeft=5;" value="Stage 2: Resolution Proof Upload&#xa;• Upload Resolution Proof (Photos/PDFs)&#xa;• Enter Officer Completion Remarks&#xa;• API: POST /api/v1/srcs/submit-proof" vertex="1">
+          <mxGeometry height="70" width="260" x="1975" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="O_SRCS_STAGE3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#10B981;fontSize=10;fontColor=#064E3B;align=left;spacingLeft=5;" value="Stage 3: PRR AI Verification &amp; Commit Resolution&#xa;• Gemini 2.5 Flash Vision automatically compares Original Evidence vs Resolution Proof&#xa;• AI Match Score &amp; Integrity Verification Badge (Pass / Fail)&#xa;• Officer Commits Resolution -&gt; Updates main_db &amp; Redis Cache -&gt; Sends SMS to Citizen&#xa;• Backend API: POST /api/v1/srcs/commit-resolution" vertex="1">
+          <mxGeometry height="75" width="530" x="1705" y="815" as="geometry" />
+        </mxCell>
+        <mxCell id="O_HANDOFF" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontSize=10;fontColor=#991B1B;align=left;spacingLeft=8;" value="6. Inter-Department Handoff Modal&#xa;• Re-route misdirected complaint to dep_01, dep_02, or dep_03&#xa;• Mandatory Transfer Reason &amp; Handoff Note&#xa;• API: POST /api/v1/departments/reassign" vertex="1">
+          <mxGeometry height="95" width="280" x="2270" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="O_SLA_ALERT" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#DC2626;fontSize=10;fontColor=#7F1D1D;align=left;spacingLeft=8;" value="7. Live Escalation Warning Drawer&#xa;• Triggered at 20h (4h before L0 breach)&#xa;• One-click Extension Request with Reason&#xa;• Notification push to Department Head" vertex="1">
+          <mxGeometry height="95" width="280" x="2270" y="805" as="geometry" />
+        </mxCell>
+        <mxCell id="O_OFFICER_REPORTS" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#64748B;fontSize=11;fontColor=#1E293B;align=left;spacingLeft=10;" value="8. Department Performance &amp; SLA Reports (/dept/reports)&#xa;• Resolution Rate Trends, Average Time-to-Resolve, Citizen Satisfaction Index&#xa;• Backend API: GET /api/v1/departments/{dep_id}/reports/summary" vertex="1">
+          <mxGeometry height="75" width="860" x="1690" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="ZONE_ADMIN" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#7E22CE;fontStyle=1;fontSize=14;fontColor=#581C87;startSize=30;rounded=1;" value="LAYER 4: SUPER ADMIN, AUDITOR &amp; MULTI-TIER ESCALATION CONSOLE" vertex="1">
+          <mxGeometry height="1020" width="950" x="2600" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="A_DASHBOARD" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#9333EA;fontSize=11;fontColor=#581C87;align=left;spacingLeft=10;" value="1. Executive Control Tower &amp; System Heatmap (/admin/overview)&#xa;• High-Level Overview: Total Ingested | Resolved (SRCS) | Escalated to State | Escalated to Central&#xa;• Geographic Grievance Density Heatmap (City / District / Ward Breakdown)&#xa;• Department Comparison Chart (dep_01 vs dep_02 vs dep_03 SLA Adherence)&#xa;• Live System Health: NGINX RPS, Redis Cache Hit Ratio, Flask Worker Load&#xa;• Backend API: GET /api/v1/admin/overview-metrics" vertex="1">
+          <mxGeometry height="150" width="910" x="2620" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="A_ESCALATION" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=11;fontColor=#7F1D1D;align=left;spacingLeft=10;" value="2. Multi-Tier SLA Escalation Monitor (/admin/escalations)&#xa;• 24-Hour L0 Department Breach Queue (Alert sent to Department Chief)&#xa;• 36-Hour L1 State Government DBMS Escalation Table (Automatic Warehouse Sync)&#xa;• 72-Hour L2 Central Government DBMS Escalation Table (National Grievance Portal Sync)&#xa;• Manual Intervention &amp; Expedited Dispatch Controller&#xa;• Backend API: GET /api/v1/admin/escalations?level=state&amp;level=central&#xa;• Backend API: POST /api/v1/admin/escalations/override-dispatch" vertex="1">
+          <mxGeometry height="160" width="910" x="2620" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="A_AI_MONITOR" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=11;fontColor=#78350F;align=left;spacingLeft=10;" value="3. Gemini 2.5 Flash AI Engine &amp; PRR Verification Center (/admin/ai-engine)&#xa;• LLM Context Analysis Accuracy Score &amp; Latency Metric (p95 / p99 ms)&#xa;• Priority Classification Confusion Matrix (Critical / High / Med / Low Distribution)&#xa;• Problem Resolve Re-evaluation (PRR) Vision Proof Inspection Log&#xa;• AI Confidence Threshold Tuning Slider (Re-route edge cases to human auditor)&#xa;• Backend API: GET /api/v1/ai/performance-metrics" vertex="1">
+          <mxGeometry height="150" width="910" x="2620" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="A_SECURITY_AUDIT" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;fontSize=11;fontColor=#064E3B;align=left;spacingLeft=10;" value="4. Security, Encryption &amp; Integrity Audit Logs (/admin/audit-logs)&#xa;• Dual-Layer Barrier Logs: AES-256-GCM Ingestion Barrier &amp; HMAC-SHA256 Salting Barrier&#xa;• User &amp; Officer Access Logs (IP, Geolocation, Device Fingerprint, Timestamp)&#xa;• Redis Session Revocation &amp; Rate-Limiter Blacklist Management&#xa;• Tamper-Evident Database Change Ledger&#xa;• Backend API: GET /api/v1/admin/security/audit-logs" vertex="1">
+          <mxGeometry height="150" width="910" x="2620" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="A_CONFIG" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#64748B;fontSize=11;fontColor=#1E293B;align=left;spacingLeft=10;" value="5. System Configuration &amp; Department Management (/admin/settings)&#xa;• Department Schema &amp; Route Registry (Manage dep_01, dep_02, dep_03 parameters)&#xa;• SLA Threshold Configuration (Adjust 24h / 36h / 72h default limits per category)&#xa;• Notification Gateway Config (SMS, Email, WhatsApp Webhook URLs)&#xa;• Backend API: PUT /api/v1/admin/settings/sla-rules" vertex="1">
+          <mxGeometry height="120" width="910" x="2620" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="ZONE_API_GRID" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontStyle=1;fontSize=14;fontColor=#0F172A;startSize=30;rounded=1;" value="LAYER 5: BACKEND API CONTRACTS, DATA FLOW &amp; CACHING INTEGRATION GRID (FOR BACKEND DEVELOPERS)" vertex="1">
+          <mxGeometry height="750" width="3500" x="50" y="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="API_CARD_COMPLAINTS" parent="ZONE_API_GRID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#10B981;fontSize=11;fontColor=#064E3B;align=left;spacingLeft=10;" value="2. Complaint Ingestion &amp; Tracking APIs (Flask app/api/complaints.py)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• POST /api/v1/complaints/submit&#xa;    Headers: Content-Type: multipart/form-data, Bearer Auth&#xa;    FormData: { category, title, description, dep_id, lat, lng, pincode, audio_file, files[] }&#xa;    Pipeline: Enters AES-256 Barrier -&gt; HMAC Salting -&gt; main_db Router -&gt; dep_XX DB&#xa;    Res: { tracking_id: &#39;SIH26-MH-DEP01-89342&#39;, status: &#39;INGESTED&#39;, estimated_sla: &#39;24h&#39; }&#xa;• GET /api/v1/complaints/track/{tracking_id}&#xa;    Res: { id, title, department, priority, current_stage, timeline: [...], proof_url, officer_notes }&#xa;    Caching: Redis GET tracking:&lt;id&gt; (sub-millisecond instant lookup, TTL 300s)&#xa;• POST /api/v1/complaints/{id}/appeal&#xa;    Req: { reason: &#39;...&#39;, dispute_proof_files[] }&#xa;    Res: { appeal_id: &#39;app_102&#39;, status: &#39;PENDING_PRR_REVIEW&#39; }" vertex="1">
+          <mxGeometry height="320" width="660" x="710" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="API_CARD_AUTH" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=10;" value="1. Authentication &amp; Session APIs (Flask app/api/auth.py)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• POST /api/v1/auth/otp/send&#xa;    Req: { phone: &#39;+91XXXXXXXXXX&#39;, role: &#39;citizen&#39; }&#xa;    Res: { status: &#39;sent&#39;, session_id: &#39;sess_99342&#39;, ttl: 300 }&#xa;• POST /api/v1/auth/otp/verify&#xa;    Req: { session_id: &#39;sess_99342&#39;, otp: &#39;482910&#39; }&#xa;    Res: { token: &#39;jwt_or_session_token&#39;, user: { id, phone } }&#xa;• POST /api/v1/auth/officer/login&#xa;    Req: { username: &#39;officer_01&#39;, password: &#39;...&#39;, dep_id: &#39;dep_01&#39; }&#xa;    Res: { token: &#39;jwt_officer_token&#39;, role: &#39;officer&#39;, dep_id: &#39;dep_01&#39; }&#xa;• GET /api/v1/auth/reverify&#xa;    Header: Authorization: Bearer &lt;token&gt;&#xa;    Res: { valid: true, user_id: &#39;usr_882&#39;, ttl_remaining: 84000 }&#xa;• Redis Key: session:&lt;token&gt; (TTL=86400s, JSON User Data)" vertex="1">
+          <mxGeometry height="320" width="640" x="80" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="API_CARD_AI" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=11;fontColor=#78350F;align=left;spacingLeft=10;" value="3. AI Context, Priority &amp; PRR APIs (Flask app/api/ai_engine.py)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• POST /api/v1/ai/pre-analyze&#xa;    Req: { text: &#39;...&#39;, category: &#39;dep_01&#39;, audio_base64: &#39;...&#39; }&#xa;    AI Engine: Gemini 2.5 Flash Prompt Execution&#xa;    Res: { extracted_context: &#39;...&#39;, suggested_dep: &#39;dep_01&#39;, priority: &#39;CRITICAL&#39;, urgency_score: 0.94 }&#xa;• POST /api/v1/ai/vision-verify-prr&#xa;    Req: { original_image_url: &#39;...&#39;, resolution_proof_url: &#39;...&#39;, context: &#39;...&#39; }&#xa;    AI Engine: Gemini 2.5 Flash Vision Multimodal Proof Matching&#xa;    Res: { match_verdict: &#39;RESOLVED_VERIFIED&#39;, confidence: 0.96, difference_analysis: &#39;Pothole fully repaired&#39; }&#xa;• Caching: Redis Key ai_cache:&lt;sha256_hash&gt; (TTL 3600s)" vertex="1">
+          <mxGeometry height="320" width="660" x="1440" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="API_CARD_DEP_SRCS" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#A855F7;fontSize=11;fontColor=#581C87;align=left;spacingLeft=10;" value="4. Departmental &amp; SRCS Workflow APIs (Flask app/api/departments.py, srcs_engine.py)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• GET /api/v1/departments/{dep_id}/complaints&#xa;    QueryParams: ?page=1&amp;limit=20&amp;priority=critical&amp;status=in_progress&#xa;    Res: { total: 142, items: [ { id, title, citizen_phone_masked, sla_deadline, status } ] }&#xa;• POST /api/v1/srcs/acknowledge&#xa;    Req: { complaint_id: &#39;...&#39;, assigned_officer_id: &#39;off_44&#39; }&#xa;• POST /api/v1/srcs/commit-resolution&#xa;    Req: { complaint_id: &#39;...&#39;, proof_files[], officer_notes: &#39;...&#39;, completion_timestamp }&#xa;    Pipeline: Triggers PRR AI -&gt; Commits to dep_db &amp; main_db -&gt; Clears Redis Cache&#xa;• POST /api/v1/departments/reassign&#xa;    Req: { complaint_id: &#39;...&#39;, from_dep: &#39;dep_01&#39;, to_dep: &#39;dep_02&#39;, reason: &#39;...&#39; }" vertex="1">
+          <mxGeometry height="320" width="680" x="2130" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="API_CARD_ADMIN_SYNC" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontSize=11;fontColor=#7F1D1D;align=left;spacingLeft=10;" value="5. Admin &amp; Multi-Tier DBMS Sync APIs (Flask app/api/admin.py, Celery Tasks)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• GET /api/v1/admin/overview-metrics&#xa;    Res: { total_complaints, resolved_rate, avg_sla_hours, breaches: { l0_24h, l1_36h, l2_72h } }&#xa;• GET /api/v1/admin/escalations&#xa;    Res: { state_dbms_pending: [...], central_dbms_pending: [...] }&#xa;• Background Celery Worker: celery_tasks.check_sla_breaches (Runs every 15 mins)&#xa;    - If Age &gt; 24h &amp; Not Resolved -&gt; Alert Dept Head (L0)&#xa;    - If Age &gt; 36h &amp; Not Resolved -&gt; Auto-Escalate to State Gov DBMS (L1)&#xa;    - If Age &gt; 72h &amp; Not Resolved -&gt; Auto-Escalate to Central Gov DBMS (L2)&#xa;• GET /api/v1/admin/security/audit-logs&#xa;    Res: { logs: [ { timestamp, event: &#39;AES_ENCRYPT&#39;, hmac_verified: true, ip: &#39;...&#39; } ] }" vertex="1">
+          <mxGeometry height="320" width="680" x="2840" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="API_STATE_MACHINE" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#0F172A;fontSize=11;fontColor=#F8FAFC;align=left;spacingLeft=15;" value="FRONTEND STATE MACHINE &amp; ERROR RECOVERY MATRIX (HOW THE UI HANDLES EVERY BACKEND SCENARIO)&#xa;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#xa;• SCENARIO 1: Citizen Submits Form (Network OK) -&gt; UI shows Step Progress Spinner -&gt; POST /complaints/submit -&gt; 201 Created -&gt; Stores Token in LocalStorage -&gt; Redirects to /submit/success.&#xa;• SCENARIO 2: Officer Session Expired (401 Unauthorized) -&gt; UI Interceptor catches 401 -&gt; Freezes current form state in DraftStore -&gt; Opens Re-Auth Modal -&gt; On success, auto-retries pending API call.&#xa;• SCENARIO 3: High Server Traffic (429 Rate Limit) -&gt; UI displays &#39;System busy, retrying...&#39; Toast -&gt; Exponential Backoff (1s, 2s, 4s) -&gt; Retries request seamlessly.&#xa;• SCENARIO 4: Network Disconnected -&gt; UI switches to Offline Indicator -&gt; Saves Complaint Draft to IndexedDB -&gt; When online, prompts citizen: &#39;Resume previous complaint?&#39;.&#xa;• SCENARIO 5: PRR Vision Check Mismatch (&lt;70% confidence) -&gt; Officer UI flags: &#39;AI detected proof discrepancy&#39; -&gt; Requires Officer Supervisor Manual Override Signature." vertex="1">
+          <mxGeometry height="150" width="3440" x="80" y="1570" as="geometry" />
+        </mxCell>
+        <mxCell id="E_C_HOME_AUTH" edge="1" parent="1" source="C_HOME" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_AUTH" value="Login / Verify OTP">
+          <mxGeometry relative="1" x="1" y="20" as="geometry">
+            <mxPoint x="-20" y="20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_C_HOME_WIZ" edge="1" parent="1" source="C_HOME" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_WIZ_S1" value="Lodge Grievance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_C_WIZ_1_2" edge="1" parent="1" source="C_WIZ_S1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_WIZ_S2" value="Next: Attach Media &amp; Location">
+          <mxGeometry relative="1" x="1" y="94" as="geometry">
+            <mxPoint x="80" y="44" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_C_WIZ_2_3" edge="1" parent="1" source="C_WIZ_S2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_WIZ_S3" value="Next: AI Pre-Analysis">
+          <mxGeometry relative="1" x="0.2889" y="-50" as="geometry">
+            <mxPoint x="50" y="-50" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_C_WIZ_3_4" edge="1" parent="1" source="C_WIZ_S3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_WIZ_S4" value="Next: Review Summary">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_C_WIZ_4_SUCC" edge="1" parent="1" source="C_WIZ_S4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_SUBMIT_SUCCESS" value="POST /complaints/submit (201 Created)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_C_SUCC_TRACK" edge="1" parent="1" source="C_SUBMIT_SUCCESS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_TRACKER" value="Track with Token ID">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_C_TRACK_APPEAL" edge="1" parent="1" source="C_TRACKER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="C_APPEAL" value="Dispute Resolution (PRR)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_AUTH_DASH" edge="1" parent="1" source="O_AUTH" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_DASHBOARD" value="JWT Authenticated">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_DASH_QUEUE" edge="1" parent="1" source="O_DASHBOARD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_QUEUE" value="View Filtered Queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_QUEUE_DETAIL" edge="1" parent="1" source="O_QUEUE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_DETAIL" value="Select Complaint Ticket">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_DETAIL_SRCS" edge="1" parent="1" source="O_DETAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_SRCS_STAGE1" value="Initiate SRCS Workflow">
+          <mxGeometry relative="1" x="0.0292" y="22" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_O_SRCS_1_2" edge="1" parent="1" source="O_SRCS_STAGE1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_SRCS_STAGE2" value="Field Action Taken">
+          <mxGeometry relative="1" x="-1" y="27" as="geometry">
+            <mxPoint x="-25" y="17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_O_SRCS_2_3" edge="1" parent="1" source="O_SRCS_STAGE2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_SRCS_STAGE3" value="Gemini 2.5 Vision Check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_DETAIL_HANDOFF" edge="1" parent="1" source="O_DETAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_HANDOFF" value="Misrouted? Reassign Dept">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_O_DETAIL_ALERT" edge="1" parent="1" source="O_QUEUE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="O_SLA_ALERT" value="SLA &lt; 4h Alert">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_A_DASH_ESC" edge="1" parent="1" source="A_DASHBOARD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="A_ESCALATION" value="Inspect 36h/72h SLA Breaches">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_A_DASH_AI" edge="1" parent="1" source="A_DASHBOARD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="A_AI_MONITOR" value="Inspect Gemini 2.5 Accuracy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_A_DASH_SEC" edge="1" parent="1" source="A_DASHBOARD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#4A5568;fontSize=10;fontColor=#2D3748;" target="A_SECURITY_AUDIT" value="Inspect Barrier &amp; Salting Logs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_API_C_WIZ" edge="1" parent="1" source="C_WIZ_S4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#10B981;dashed=1;" target="API_CARD_COMPLAINTS" value="Submit Payload to Ingestion API">
+          <mxGeometry relative="1" x="-0.0314" y="25" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_API_C_TRACK" edge="1" parent="1" source="C_TRACKER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3B82F6;dashed=1;" target="API_CARD_COMPLAINTS" value="Cached Lookup via Redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_API_AI_WIZ" edge="1" parent="1" source="C_WIZ_S3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#F59E0B;dashed=1;" target="API_CARD_AI" value="Gemini 2.5 Flash Classification">
+          <mxGeometry relative="1" x="-0.1452" y="310" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_API_O_SRCS" edge="1" parent="1" source="O_SRCS_STAGE3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8B5CF6;dashed=1;" target="API_CARD_DEP_SRCS" value="Commit SRCS Resolution">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_API_ADMIN_ESC" edge="1" parent="1" source="A_ESCALATION" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#EF4444;dashed=1;" target="API_CARD_ADMIN_SYNC" value="Sync to State / Central DBMS">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3075" y="870" />
+              <mxPoint x="3180.04" y="870" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1x4G6fiKdcTqOuOTGXLv-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=light-dark(transparent,#6538FF);align=center;verticalAlign=middle;rounded=0;" value="MY FIRST EVER THIS BIG ARCHITECTURE!!!!" vertex="1">
+          <mxGeometry height="120" width="1610" x="920" y="-120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
