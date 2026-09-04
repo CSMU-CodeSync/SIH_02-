@@ -9,28 +9,54 @@ The database architecture employs **dual-layer cryptographic barriers**:
 
 ---
 
-## 2. Cryptographic Architecture Diagram
+## 2. Security Architecture Placement
+
+The Encryption Barrier, Salting Barrier, main_db, isolated departmental schemas (`dep_01..03`), and external State/Central DBMS fit into the master architecture as shown:
 
 ```mermaid
-flowchart LR
- subgraph Ingestion & Encryption
- RawText[Raw Complaint Text] --> EncBarrier[Encryption Barrier AES-256-GCM]
- EncBarrier --> EncText[Encrypted Payload]
- EncText --> MainDB[(main_db Core Ledger)]
- end
+flowchart TD
+    Client[Citizen / API Client] -->|HTTPS Requests| NGINX[NGINX Load Balancer]
+    NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
+    
+    subgraph Authentication & Fast Memory
+        Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
+        Flask --> Auth[User Session ID & Auth Re-verify]
+    end
 
- subgraph Tracking & Salting
- TrackingID[Tracking ID / Hash] --> SaltBarrier[Encryption Salting Barrier HMAC-SHA256]
- Salt[Secret Dynamic Salt] --> SaltBarrier
- SaltBarrier --> SaltedHash[Salted Lookup Token]
- SaltedHash --> RedisCache[(Redis Cache Store)]
- end
+    subgraph Security & Ingestion Barriers
+        Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
+        EncBarrier --> Tracking[Tracking Complaint System]
+        Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
+    end
 
- subgraph Department Isolation
- MainDB -->|Router| Dep1[(dep_01 Schema)]
- MainDB -->|Router| Dep2[(dep_02 Schema)]
- MainDB -->|Router| Dep3[(dep_03 Schema)]
- end
+    subgraph AI Intelligence Engine
+        Flask --> CtxAnalysis[Context Analysis]
+        Flask --> ReEval[Re-evaluation of Complaint]
+        Flask --> Priority[Priority Classification P1-P4]
+        CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
+    end
+
+    subgraph Core Ledger & Departmental Routing
+        Flask --> MainDB[(Main Database - main_db)]
+        MainDB --> Dep1[(dep_01 Database)]
+        MainDB --> Dep2[(dep_02 Database)]
+        MainDB --> Dep3[(dep_03 Database)]
+        Dep1 --> Int1[dep_01 Interface]
+        Dep2 --> Int2[dep_02 Interface]
+        Dep3 --> Int3[dep_03 Interface]
+    end
+
+    subgraph SRCS - Stage Resolve Commit System
+        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+        ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
+        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
+        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+        
+        SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
+        PRR -- Validated --> Resolved
+        PRR -. Status Re-sync .-> SaltBarrier
+    end
 ```
 
 ---
@@ -45,25 +71,24 @@ import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 class EncryptionBarrierService:
- def __init__(self, master_key_b64: str):
- self.key = base64.b64decode(master_key_b64)
- self.aesgcm = AESGCM(self.key)
+    def __init__(self, master_key_b64: str):
+        self.key = base64.b64decode(master_key_b64)
+        self.aesgcm = AESGCM(self.key)
 
- def encrypt_payload(self, plain_text: str) -> str:
- """Encrypts sensitive complaint text using AES-256-GCM with a 96-bit nonce."""
- nonce = os.urandom(12)
- ciphertext = self.aesgcm.encrypt(nonce, plain_text.encode("utf-8"), None)
- # Pack nonce + ciphertext and base64 encode
- packed = nonce + ciphertext
- return base64.b64encode(packed).decode("utf-8")
+    def encrypt_payload(self, plain_text: str) -> str:
+        """Encrypts sensitive complaint text using AES-256-GCM with a 96-bit nonce."""
+        nonce = os.urandom(12)
+        ciphertext = self.aesgcm.encrypt(nonce, plain_text.encode("utf-8"), None)
+        packed = nonce + ciphertext
+        return base64.b64encode(packed).decode("utf-8")
 
- def decrypt_payload(self, encrypted_b64: str) -> str:
- """Decrypts AES-256-GCM ciphertext payload."""
- packed = base64.b64decode(encrypted_b64.encode("utf-8"))
- nonce = packed[:12]
- ciphertext = packed[12:]
- decrypted_bytes = self.aesgcm.decrypt(nonce, ciphertext, None)
- return decrypted_bytes.decode("utf-8")
+    def decrypt_payload(self, encrypted_b64: str) -> str:
+        """Decrypts AES-256-GCM ciphertext payload."""
+        packed = base64.b64decode(encrypted_b64.encode("utf-8"))
+        nonce = packed[:12]
+        ciphertext = packed[12:]
+        decrypted_bytes = self.aesgcm.decrypt(nonce, ciphertext, None)
+        return decrypted_bytes.decode("utf-8")
 ```
 
 ### 3.2 Encryption Salting Barrier Service
@@ -73,14 +98,14 @@ import hmac
 import hashlib
 
 class EncryptionSaltingBarrierService:
- def __init__(self, salt_secret: str):
- self.salt_secret = salt_secret.encode("utf-8")
+    def __init__(self, salt_secret: str):
+        self.salt_secret = salt_secret.encode("utf-8")
 
- def generate_salted_tracking_hash(self, complaint_id: str, timestamp: str) -> str:
- """Generates a tamper-proof HMAC-SHA256 salted hash for complaint tracking lookups."""
- message = f"{complaint_id}:{timestamp}".encode("utf-8")
- signature = hmac.new(self.salt_secret, message, hashlib.sha256).hexdigest()
- return f"TRK-{signature[:16].upper()}"
+    def generate_salted_tracking_hash(self, complaint_id: str, timestamp: str) -> str:
+        """Generates a tamper-proof HMAC-SHA256 salted hash for complaint tracking lookups."""
+        message = f"{complaint_id}:{timestamp}".encode("utf-8")
+        signature = hmac.new(self.salt_secret, message, hashlib.sha256).hexdigest()
+        return f"TRK-{signature[:16].upper()}"
 ```
 
 ---
@@ -97,14 +122,14 @@ CREATE SCHEMA IF NOT EXISTS dep_03_schema;
 
 -- Isolated Complaint Table for Department 01
 CREATE TABLE dep_01_schema.complaints (
- id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
- master_complaint_id UUID NOT NULL,
- encrypted_details TEXT NOT NULL,
- priority_level VARCHAR(20) NOT NULL,
- status VARCHAR(30) DEFAULT 'PENDING_RESOLVE',
- assigned_officer_id UUID,
- created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
- updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    master_complaint_id UUID NOT NULL,
+    encrypted_details TEXT NOT NULL,
+    priority_level VARCHAR(20) NOT NULL,
+    status VARCHAR(30) DEFAULT 'PENDING_RESOLVE',
+    assigned_officer_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
