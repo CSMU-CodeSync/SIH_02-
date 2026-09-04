@@ -34,15 +34,23 @@ graph TD
             CtxAnalysis & Priority & PRR_Vision <-->|JSON / Vision API| Gemini[Gemini 2.5 Flash LLM]
         end
 
-        subgraph Core Ledger & Departmental Routing
-            Flask --> MainDB[(Main Database - main_db)]
-            MainDB --> Dep1[(dep_01 Roads DB)]
-            MainDB --> Dep2[(dep_02 Water DB)]
-            MainDB --> Dep3[(dep_03 Electricity DB)]
-            Dep1 --> Int1[dep_01 Interface]
-            Dep2 --> Int2[dep_02 Interface]
-            Dep3 --> Int3[dep_03 Interface]
+                subgraph Core Ledger & Departmental Routing
+            Flask --> MainDB[(Main Master DB Ledger - main_db)]
+            
+            subgraph Isolated Department Database Schemas
+                MainDB --> Dep1[(dep_01 Roads Schema)]
+                MainDB --> Dep2[(dep_02 Water Schema)]
+                MainDB --> Dep3[(dep_03 Electricity Schema)]
+            end
+            
+            subgraph Unified Department Portal UI - Role-Based Rendering
+                Dep1 --> Int1[dep_01 Kanban Interface]
+                Dep2 --> Int2[dep_02 Ledger Table Interface]
+                Dep3 --> Int3[dep_03 Outage Queue Interface]
+            end
         end
+
+
 
         subgraph SRCS - Stage Resolve Commit System & Celery
             Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
