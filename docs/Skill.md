@@ -6,63 +6,75 @@ This document specifies the prompt engineering strategies, system instructions, 
 Gemini 2.5 Flash powers three critical intelligence modules:
 1. **Context Analysis Engine**: Semantic intent extraction and automated tagging.
 2. **Priority Classification Engine**: Urgency scoring (`P1-CRITICAL` to `P4-LOW`).
-3. **PRR (Problem Resolve Re-evaluation) Engine**: Multi-modal vision and text context verification for resolution proof checking.
+3. **PRR (Problem Resolve Re-evaluation) Engine**: Multi-modal vision and text context verification for resolution proof checking in `PRRStudio.tsx`.
 
 ---
 
 ## 2. AI Intelligence Engine in System Architecture
 
-The Gemini 2.5 Flash LLM connects directly to Flask API, `main_db`, Redis cache, and the SRCS PRR Engine as shown below:
+The Gemini 2.5 Flash LLM connects directly to React UI (`PRRStudio`), Flask API, `main_db`, Redis cache, and the SRCS PRR Engine as shown below:
 
 ```mermaid
 flowchart TD
-    Client[Citizen / API Client] -->|HTTPS Requests| NGINX[NGINX Load Balancer]
-    NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
+    subgraph Client App - React Vite TS Frontend
+        UI[User Interface / React Components] --> ClientStore[Zustand Auth & Draft Store]
+        UI --> ClientCrypto[Client Crypto Barrier - AES-256 & HMAC]
+        ClientStore <-->|Offline Drafts| IndexedDB[(Browser IndexedDB)]
+        UI --> Axios[Axios API Client & Interceptors]
+    end
+
+    Axios -->|HTTPS / REST API| NGINX[NGINX Load Balancer]
     
-    subgraph Authentication & Fast Memory
-        Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
-        Flask --> Auth[User Session ID & Auth Re-verify]
-    end
-
-    subgraph Security & Ingestion Barriers
-        Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
-        EncBarrier --> Tracking[Tracking Complaint System]
-        Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
-    end
-
-    subgraph AI Intelligence Engine
-        Flask --> CtxAnalysis[Context Analysis]
-        Flask --> ReEval[Re-evaluation of Complaint]
-        Flask --> Priority[Priority Classification P1-P4]
-        CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
-    end
-
-    subgraph Core Ledger & Departmental Routing
-        Flask --> MainDB[(Main Database - main_db)]
-        MainDB --> Dep1[(dep_01 Database)]
-        MainDB --> Dep2[(dep_02 Database)]
-        MainDB --> Dep3[(dep_03 Database)]
-        Dep1 --> Int1[dep_01 Interface]
-        Dep2 --> Int2[dep_02 Interface]
-        Dep3 --> Int3[dep_03 Interface]
-    end
-
-    subgraph SRCS - Stage Resolve Commit System
-        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
-        ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
-        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
-        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
-        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+    subgraph Flask Backend Gateway
+        NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
         
-        SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
-        PRR -- Validated --> Resolved
-        PRR -. Status Re-sync .-> SaltBarrier
+        subgraph Authentication & Fast Memory
+            Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
+            Flask --> Auth[User Session ID & Auth Re-verify]
+        end
+
+        subgraph Security & Ingestion Barriers
+            Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
+            EncBarrier --> Tracking[Tracking Complaint System]
+            Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
+        end
+
+        subgraph AI Intelligence Engine
+            Flask --> CtxAnalysis[Context Analysis]
+            Flask --> ReEval[Re-evaluation of Complaint]
+            Flask --> Priority[Priority Classification P1-P4]
+            CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
+        end
+
+        subgraph Core Ledger & Departmental Routing
+            Flask --> MainDB[(Main Database - main_db)]
+            MainDB --> Dep1[(dep_01 Database)]
+            MainDB --> Dep2[(dep_02 Database)]
+            MainDB --> Dep3[(dep_03 Database)]
+            Dep1 --> Int1[dep_01 Interface]
+            Dep2 --> Int2[dep_02 Interface]
+            Dep3 --> Int3[dep_03 Interface]
+        end
+
+        subgraph SRCS - Stage Resolve Commit System
+            Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+            ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
+            ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+            SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
+            SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+            
+            SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
+            PRR -- Validated --> Resolved
+            PRR -. Status Re-sync .-> SaltBarrier
+        end
     end
+    
+    PRR -. Vision Proof Audit Result .-> UI
 ```
 
 ---
 
-## 3. Gemini 2.5 Flash Service Integration (`app/services/gemini_service.py`)
+## 3. Gemini 2.5 Flash Service Integration (`app/features/ai_engine/services.py`)
 
 ```python
 import json
@@ -128,12 +140,3 @@ Return JSON matching this schema:
         response = self.model.generate_content([prompt, image_part])
         return json.loads(response.text)
 ```
-
----
-
-## 5. Prompt Engineering Rules & Guardrails
-
-1. **Deterministic Output (`temperature = 0.1`)**: Ensures consistent classification across runs for identical complaint text.
-2. **Strict JSON Schema (`response_mime_type = "application/json"`)**: Guaranteed JSON parsing without regex trimming.
-3. **Safety Filters**: Block offensive text while extracting core grievance intent without failing request.
-4. **Fallback Handling**: If Gemini API call times out (> 2.0s), default to fallback heuristic keyword matching (`dep_01` = Roads, `dep_02` = Water, `dep_03` = Electricity) with priority `P3-MEDIUM`.

@@ -1,9 +1,12 @@
-# System Architecture & Tech Stack (Architecture.md) — Flask Backend
+# System Architecture & Tech Stack (Architecture.md) — Full-Stack Specification
 
 ## 1. Technology Stack & Component Overview
 
 | Layer | Technology | Specification / Purpose |
 | :--- | :--- | :--- |
+| **Frontend UI Framework** | React 18 + TypeScript (Vite 5) | Component-driven SPA with Tailwind CSS, Radix UI primitives, Lucide icons, Framer Motion animations. |
+| **Frontend State & Cache** | Zustand + TanStack Query (v5) | Client session persistence, offline IndexedDB storage, automated query polling. |
+| **Frontend Visualization** | Leaflet Heatmap + Recharts | Real-time complaint spatial heatmap, SLA distribution gauges, and departmental velocity metrics. |
 | **Reverse Proxy & Load Balancer** | NGINX 1.24+ | SSL Termination, DDoS mitigation, rate limiting, and request balancing across Gunicorn workers. |
 | **API Gateway Framework** | Python 3.11+ / Flask 3.x | Asynchronous & Blueprint-based REST API framework. |
 | **WSGI Server** | Gunicorn (gevent worker model) | Multi-process concurrent request handling. |
@@ -14,7 +17,7 @@
 | **Departmental DBs (`dep_01..03`)** | Isolated PostgreSQL Schemas / Databases | Multi-tenant schema isolation for department 01 (Roads), department 02 (Water), and department 03 (Electricity). |
 | **SRCS Subsystem** | Celery + Redis Broker | Stage Resolve Commit System managing SLA escalation (24h alert, 36h State DBMS, 72h Central DBMS). |
 | **Escalation Data Warehouses** | State & Central Gov. DBMS | External persistence endpoints for L1 (36h) & L2 (72h) SLA breaches. |
-| **PRR Engine** | Gemini 2.5 Flash Vision | Problem Resolve Re-evaluation engine auditing officer-submitted resolution proof photos before closure. |
+| **PRR Engine & Studio** | Gemini 2.5 Flash Vision | Problem Resolve Re-evaluation engine auditing officer-submitted resolution proof photos before closure. |
 
 ---
 
@@ -22,53 +25,65 @@
 
 ```mermaid
 flowchart TD
-    Client[Citizen / API Client] -->|HTTPS Requests| NGINX[NGINX Load Balancer]
-    NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
+    subgraph Client App - React Vite TS Frontend
+        UI[User Interface / React Components] --> ClientStore[Zustand Auth & Draft Store]
+        UI --> ClientCrypto[Client Crypto Barrier - AES-256 & HMAC]
+        ClientStore <-->|Offline Drafts| IndexedDB[(Browser IndexedDB)]
+        UI --> Axios[Axios API Client & Interceptors]
+    end
+
+    Axios -->|HTTPS / REST API| NGINX[NGINX Load Balancer]
     
-    subgraph Authentication & Fast Memory
-        Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
-        Flask --> Auth[User Session ID & Auth Re-verify]
-    end
-
-    subgraph Security & Ingestion Barriers
-        Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
-        EncBarrier --> Tracking[Tracking Complaint System]
-        Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
-    end
-
-    subgraph AI Intelligence Engine
-        Flask --> CtxAnalysis[Context Analysis]
-        Flask --> ReEval[Re-evaluation of Complaint]
-        Flask --> Priority[Priority Classification P1-P4]
-        CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
-    end
-
-    subgraph Core Ledger & Departmental Routing
-        Flask --> MainDB[(Main Database - main_db)]
-        MainDB --> Dep1[(dep_01 Database)]
-        MainDB --> Dep2[(dep_02 Database)]
-        MainDB --> Dep3[(dep_03 Database)]
-        Dep1 --> Int1[dep_01 Interface]
-        Dep2 --> Int2[dep_02 Interface]
-        Dep3 --> Int3[dep_03 Interface]
-    end
-
-    subgraph SRCS - Stage Resolve Commit System
-        Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
-        ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
-        ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
-        SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
-        SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+    subgraph Flask Backend Gateway
+        NGINX -->|Reverse Proxy| Flask[Flask API Gateway]
         
-        SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
-        PRR -- Validated --> Resolved
-        PRR -. Status Re-sync .-> SaltBarrier
+        subgraph Authentication & Fast Memory
+            Flask <-->|Sub-ms Auth Check| Redis[(Redis Cache & Session Store)]
+            Flask --> Auth[User Session ID & Auth Re-verify]
+        end
+
+        subgraph Security & Ingestion Barriers
+            Flask --> EncBarrier[Encryption Barrier - AES-256-GCM]
+            EncBarrier --> Tracking[Tracking Complaint System]
+            Tracking --> SaltBarrier[Encryption Salting Barrier - HMAC-SHA256]
+        end
+
+        subgraph AI Intelligence Engine
+            Flask --> CtxAnalysis[Context Analysis]
+            Flask --> ReEval[Re-evaluation of Complaint]
+            Flask --> Priority[Priority Classification P1-P4]
+            CtxAnalysis & ReEval & Priority <-->|JSON Prompt / Vision| Gemini[Gemini 2.5 Flash LLM]
+        end
+
+        subgraph Core Ledger & Departmental Routing
+            Flask --> MainDB[(Main Database - main_db)]
+            MainDB --> Dep1[(dep_01 Database)]
+            MainDB --> Dep2[(dep_02 Database)]
+            MainDB --> Dep3[(dep_03 Database)]
+            Dep1 --> Int1[dep_01 Interface]
+            Dep2 --> Int2[dep_02 Interface]
+            Dep3 --> Int3[dep_03 Interface]
+        end
+
+        subgraph SRCS - Stage Resolve Commit System
+            Int1 & Int2 & Int3 --> ResCheck{Is Problem Resolved?}
+            ResCheck -- YES --> Resolved([Complaint Resolved & Closed])
+            ResCheck -- NO --> SLA24[Resolve Period 24 hrs]
+            SLA24 -- Over 24h --> SLA36[Staged Period 36 hrs] --> StateDB[(State Gov. DBMS - L1 Escalation)]
+            SLA36 -- Over 36h --> SLA72[Staged Period 72 hrs] --> CentralDB[(Central Gov. DBMS - L2 Escalation)]
+            
+            SLA24 & StateDB & CentralDB --> PRR[Proof Checking & PRR Engine]
+            PRR -- Validated --> Resolved
+            PRR -. Status Re-sync .-> SaltBarrier
+        end
     end
+    
+    PRR -. Vision Proof Audit Result .-> UI
 ```
 
 ---
 
-## 3. Feature-Based Folder Architecture (Flask Modular Structure)
+## 3. Feature-Based Folder Architecture (Flask Backend Structure)
 
 In this architecture, Flask is organized into self-contained **Feature Modules** (`app/features/*`). Each feature owns its routes (Blueprints), data models, services, and schemas:
 
@@ -76,6 +91,12 @@ In this architecture, Flask is organized into self-contained **Feature Modules**
 SIH_02/
 ├── README.md                    # Main Repository Landing Page with Architecture Diagram
 ├── Sih02.drawio                 # Master Draw.io System Architecture Diagram
+├── Frontend/                    # React + Vite + TypeScript Frontend Application
+│   └── structure/
+│       ├── Sih02_Frontend.drawio # Frontend Draw.io Architecture Diagram
+│       ├── AUTH_scenerioes.md    # Frontend Error Recovery Matrix & State Machine
+│       ├── frontend_archi.md     # Frontend Technical Architecture & Code Specs
+│       └── frontend_ui_ux_architecture.md
 ├── docs/                        # Architecture & Strategy Prompt Engineering Docs
 │   ├── PRD.md
 │   ├── Architecture.md
