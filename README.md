@@ -108,6 +108,7 @@ All prompt engineering, frontend planning, and system strategy documents are sto
 | :--- | :--- |
 | [**`docs/PRD.md`**](docs/PRD.md) | **Product Requirement Document**: Vision, API endpoints, NFRs, and feature specifications. |
 | [**`docs/Architecture.md`**](docs/Architecture.md) | **System Architecture & Tech Stack**: Full-stack topology, Flask Feature-Based Folder Structure, and Vite setup. |
+| [**`docs/Architecture_Explained.md`**](docs/Architecture_Explained.md) | **Architectural Specifications Explained**: Visitor-friendly plain-language & technical guide explaining every term, component, and specification. |
 | [**`docs/Authentication.md`**](docs/Authentication.md) | **Auth & Session Strategy**: Redis session caching, Axios interceptors, Argon2id hashing, user re-verification middleware. |
 | [**`docs/Security_db.md`**](docs/Security_db.md) | **Database Security & Encryption**: AES-256-GCM Encryption Barrier, HMAC Salting Barrier, and Schema Isolation. |
 | [**`docs/Security_audits.md`**](docs/Security_audits.md) | **Security Audits & OWASP**: OWASP Top 10 mitigations, audit trails, and SRCS SLA audit verification rules. |

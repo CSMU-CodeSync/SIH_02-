@@ -74,6 +74,7 @@ flowchart TD
 | :--- | :--- | :--- |
 | [**`PRD.md`**](PRD.md) | **Product Requirement Document** | Project vision, API endpoints, NFRs, and feature specifications. |
 | [**`Architecture.md`**](Architecture.md) | **System Architecture & Topology** | React UI, Flask App Factory, NGINX Load Balancer, Redis, Gemini 2.5 Flash, and DB routing. |
+| [**`Architecture_Explained.md`**](Architecture_Explained.md) | **Architectural Specifications Explained** | Visitor-friendly plain-language & technical guide explaining every term, component, and specification. |
 | [**`Authentication.md`**](Authentication.md) | **Auth & Session Strategy** | Redis session caching, Axios interceptors, Argon2id hashing, user re-verification middleware. |
 | [**`Security_db.md`**](Security_db.md) | **Database Security & Encryption** | AES-256-GCM Encryption Barrier, HMAC Salting Barrier, and Schema Isolation. |
 | [**`Security_audits.md`**](Security_audits.md) | **Security Audits & OWASP** | OWASP Top 10 mitigations, audit trails, and SRCS SLA audit verification rules. |
