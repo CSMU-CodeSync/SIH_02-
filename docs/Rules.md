@@ -83,11 +83,11 @@ flowchart TD
 
 ---
 
-## 4. Recommended Code Template: Flask Blueprint (`app/api/complaints.py`)
+## 4. Recommended Code Template: Flask Blueprint (`app/features/complaints/routes.py`)
 
 ```python
 from flask import Blueprint, request, jsonify, g
-from app.api.auth import require_session
+from app.features.auth.services import require_session
 from app.services.encryption_service import EncryptionBarrierService, EncryptionSaltingBarrierService
 from app.services.gemini_service import GeminiFlashEngine
 from app.extensions import db, redis_client

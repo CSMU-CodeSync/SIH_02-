@@ -68,7 +68,9 @@ flowchart TD
 
 ---
 
-## 3. Recommended Directory Structure (`SIH_02` Flask Project)
+## 3. Feature-Based Folder Architecture (Flask Modular Structure)
+
+In this architecture, Flask is organized into self-contained **Feature Modules** (`app/features/*`). Each feature owns its routes (Blueprints), data models, services, and schemas:
 
 ```
 SIH_02/
@@ -88,28 +90,37 @@ SIH_02/
 ├── nginx/
 │   └── nginx.conf               # NGINX Load Balancer & Rate Limit Configuration
 ├── app/
-│   ├── __init__.py              # Flask App Factory & Blueprint Registration
+│   ├── __init__.py              # Flask App Factory & Feature Blueprint Registration
 │   ├── config.py                # Environment Config (Prod/Dev/Test)
-│   ├── extensions.py            # SQLAlchemy, Redis, Celery, Marshmallow Init
-│   ├── api/
-│   │   ├── auth.py              # User Session & Re-verification API
-│   │   ├── complaints.py        # Complaint Ingestion & Encryption API
-│   │   ├── ai_engine.py         # Gemini 2.5 Flash LLM Integration
-│   │   ├── departments.py       # dep_01, dep_02, dep_03 Interface Endpoints
-│   │   └── srcs_engine.py       # SRCS SLA Escalation & PRR Engine
-│   ├── services/
-│   │   ├── encryption_service.py # AES-256-GCM Barrier & Salting Hash Logic
-│   │   ├── gemini_service.py    # Gemini LLM Context & Priority Prompt Execution
-│   │   ├── redis_service.py     # Cache Wrappers & Session Store
-│   │   └── srcs_service.py      # SLA 24h/36h/72h Checker & State/Central Sync
-│   ├── models/
-│   │   ├── user.py              # Citizen & Officer Accounts
-│   │   ├── complaint.py         # main_db Master Complaint Model
-│   │   ├── department.py        # dep_01, dep_02, dep_03 Department Tables
-│   │   └── srcs_audit.py        # SRCS Escalation Audit Log
-│   └── tasks/
-│       ├── celery_app.py        # Celery Worker Configuration
-│       └── sla_tasks.py         # Scheduled Background SLA Audit Tasks
+│   ├── extensions.py            # Flask Extensions (SQLAlchemy, Redis, Celery)
+│   ├── core/                    # Shared Infrastructure Core Services
+│   │   ├── security.py          # Encryption Barrier (AES-256) & Salting Hash (HMAC)
+│   │   ├── redis_client.py      # Redis Session Store & Sliding Window Rate Limiter
+│   │   └── exceptions.py        # Custom API Exception Handlers
+│   └── features/                # FEATURE-BASED MODULES (Domain-Driven Architecture)
+│       ├── auth/                # Feature 1: User Session & Re-verification Module
+│       │   ├── routes.py        # Auth Blueprint (/api/v1/auth/...)
+│       │   ├── models.py        # User & Session Models
+│       │   ├── services.py      # Redis Session Store & Password Hashing
+│       │   └── schemas.py       # Auth DTO Schemas
+│       ├── complaints/          # Feature 2: Ingestion & Encryption Module
+│       │   ├── routes.py        # Complaints Blueprint (/api/v1/complaints/...)
+│       │   ├── models.py        # main_db Master Complaint Model
+│       │   ├── services.py      # Encryption & Tracking Service
+│       │   └── schemas.py       # Complaint Ingestion Schemas
+│       ├── ai_engine/           # Feature 3: Gemini 2.5 Flash LLM Module
+│       │   ├── routes.py        # AI Blueprint (/api/v1/ai/...)
+│       │   ├── services.py      # Context Analysis & Priority Classifier Engine
+│       │   └── prompts.py       # Structured JSON Prompt Templates
+│       ├── departments/         # Feature 4: dep_01, dep_02, dep_03 Isolated Routing Module
+│       │   ├── routes.py        # Department Blueprint (/api/v1/departments/...)
+│       │   ├── models.py        # dep_01, dep_02, dep_03 Schema Models
+│       │   └── services.py      # Department Routing Logic
+│       └── srcs/                # Feature 5: Stage Resolve Commit System Module
+│           ├── routes.py        # SRCS Blueprint (/api/v1/srcs/...)
+│           ├── models.py        # SRCS Audit Ledger Models
+│           ├── services.py      # SLA 24h/36h/72h Escalation & PRR Engine
+│           └── tasks.py         # Celery Background SLA Workers (State/Central DBMS Sync)
 ├── requirements.txt             # Python Dependencies
 ├── Dockerfile                   # Flask App Containerization
 ├── docker-compose.yml           # Local Orchestration (Flask, Redis, Postgres, NGINX)
